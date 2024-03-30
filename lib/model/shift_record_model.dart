@@ -5,14 +5,14 @@ class ShiftRecordModel {
   final int orderNum;
   final String startTime;
   final String endTime;
-  final String comment;
+  final String remarks;
 
   ShiftRecordModel({
     required this.shiftTableId,
     required this.orderNum,
     required this.startTime,
     required this.endTime,
-    required this.comment,
+    required this.remarks,
   });
 
   factory ShiftRecordModel.fromJson(Map<String, dynamic> json) =>
@@ -21,7 +21,7 @@ class ShiftRecordModel {
         orderNum: json["orderNum"],
         startTime: json["startTime"],
         endTime: json["endTime"],
-        comment: json["comment"],
+        remarks: json["remarks"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -29,7 +29,7 @@ class ShiftRecordModel {
         "orderNum": orderNum,
         "startTime": startTime,
         "endTime": endTime,
-        "comment": comment,
+        "remarks": remarks,
       };
 }
 

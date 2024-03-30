@@ -6,7 +6,7 @@ class ShiftRecordSql extends CommonSql {
   // 新規作成
   static void insert({required ShiftRecordModel model}) {
     final stmt = CommonSql.db.prepare('''
-          INSERT INTO shift_record (shift_table_id, order_num, start_time, end_time, comment)
+          INSERT INTO shift_record (shift_table_id, order_num, start_time, end_time, remarks)
           VALUES (?, ?, ?, ?, ?)
         ''');
     stmt.execute([
@@ -14,7 +14,7 @@ class ShiftRecordSql extends CommonSql {
       model.orderNum,
       model.startTime,
       model.endTime,
-      model.comment
+      model.remarks
     ]);
     stmt.dispose();
   }
@@ -23,14 +23,14 @@ class ShiftRecordSql extends CommonSql {
   static void update({required ShiftRecordModel model}) {
     final stmt = CommonSql.db.prepare('''
           UPDATE shift_record 
-          SET order_num = ?, start_time = ?, end_time = ?, comment = ?
+          SET order_num = ?, start_time = ?, end_time = ?, remarks = ?
           WHERE shift_table_id = ?
         ''');
     stmt.execute([
       model.orderNum,
       model.startTime,
       model.endTime,
-      model.comment,
+      model.remarks,
       model.shiftTableId
     ]);
     stmt.dispose();
@@ -49,7 +49,7 @@ class ShiftRecordSql extends CommonSql {
   static ShiftRecordModel? getShiftRecord(
       {required int shiftTableId, required int orderNum}) {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT shift_table_id, order_num, start_time, end_time, comment
+        SELECT shift_table_id, order_num, start_time, end_time, remarks
         FROM shift_record WHERE shift_table_id = ? AND order_num = ?
         ''', [shiftTableId, orderNum]);
 
@@ -61,7 +61,7 @@ class ShiftRecordSql extends CommonSql {
           orderNum: row['order_num'],
           startTime: row['start_time'],
           endTime: row['end_time'],
-          comment: row['comment']);
+          remarks: row['remarks']);
     }
     return model;
   }
@@ -69,7 +69,7 @@ class ShiftRecordSql extends CommonSql {
   // 全件取得
   static List<ShiftRecordModel> getShiftRecordAll({required int shiftTableId}) {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT shift_table_id, order_num, start_time, end_time, comment
+        SELECT shift_table_id, order_num, start_time, end_time, remarks
         FROM shift_record
         ''', [shiftTableId]);
     List<ShiftRecordModel> list = [];
@@ -79,7 +79,7 @@ class ShiftRecordSql extends CommonSql {
           orderNum: row['order_num'],
           startTime: row['start_time'],
           endTime: row['end_time'],
-          comment: row['comment']);
+          remarks: row['remarks']);
       list.add(model);
     }
     return list;

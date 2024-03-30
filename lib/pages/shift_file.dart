@@ -51,6 +51,7 @@ class _ShiftFileState extends State<ShiftFile> {
   Future inputFileAction() async {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           title: const Text('ファイル入力'),
@@ -58,7 +59,10 @@ class _ShiftFileState extends State<ShiftFile> {
               'シフト表を更新するファイルを選択してください。\n※現在のシフト表は上書きされるため、事前にファイル出力しておくことを推奨します。'),
           actions: [
             TextButton(
-              child: const Text('続ける'),
+              child: const Text('続ける',
+                  style: TextStyle(
+                    fontSize: 16,
+                  )),
               onPressed: () {
                 // ファイル選択
                 final pickedFile = FilePicker.platform.pickFiles(
@@ -70,7 +74,10 @@ class _ShiftFileState extends State<ShiftFile> {
               },
             ),
             TextButton(
-              child: const Text('キャンセル'),
+              child: const Text('キャンセル',
+                  style: TextStyle(
+                    fontSize: 16,
+                  )),
               onPressed: () => Navigator.pop(context),
             ),
           ],

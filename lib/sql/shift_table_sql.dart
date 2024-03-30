@@ -6,16 +6,31 @@ class ShiftTableSql extends CommonSql {
   // ID生成
   static int generateId() {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT IFNULL(MAX(id), 0) AS id FROM shift_table
+        SELECT 
+          IFNULL(MAX(id), 0) AS id
+        FROM shift_table
         ''');
-
     int id = 0;
     if (resultSet.isNotEmpty) {
       Row row = resultSet.first;
-      id = row['id']; // テーブル上の最大ID
-      id++; // インクリメント
+      id = row['id'] + 1;
     }
     return id;
+  }
+
+  // 順番生成
+  static int generateOrderNum() {
+    final ResultSet resultSet = CommonSql.db.select('''
+        SELECT 
+          IFNULL(MAX(order_num), 0) AS order_num
+        FROM shift_table
+        ''');
+    int orderNum = 0;
+    if (resultSet.isNotEmpty) {
+      Row row = resultSet.first;
+      orderNum = row['order_num'] + 1;
+    }
+    return orderNum;
   }
 
   // 新規作成
