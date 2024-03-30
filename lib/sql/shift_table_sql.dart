@@ -33,10 +33,12 @@ class ShiftTableSql extends CommonSql {
     return orderNum;
   }
 
-  // 新規作成
-  static void insert({required ShiftTableModel model}) {
+  // 新規作成(更新)
+  static void upsert({required ShiftTableModel model}) {
     final stmt = CommonSql.db.prepare('''
           INSERT INTO shift_table (id, shift_name, show_flag, base_date, order_num) VALUES (?, ?, ?, ?)
+          ON CONFLICT (id) 
+          DO UPDATE SET shift_name = ?, show_flag = ?, base_date = ?, order_num = ?;
         ''');
     stmt.execute([
       model.id,
@@ -44,26 +46,30 @@ class ShiftTableSql extends CommonSql {
       model.showFlag,
       model.baseDate,
       model.orderNum,
+      model.shiftName, // キー重複
+      model.showFlag, // キー重複
+      model.baseDate, // キー重複
+      model.orderNum, // キー重複
     ]);
     stmt.dispose();
   }
 
   // 更新
-  static void update({required ShiftTableModel model}) {
-    final stmt = CommonSql.db.prepare('''
-          UPDATE shift_table 
-          SET shift_name = ?, show_flag = ?, base_date = ?, order_num = ?
-          WHERE id = ?
-        ''');
-    stmt.execute([
-      model.shiftName,
-      model.showFlag,
-      model.baseDate,
-      model.orderNum,
-      model.id,
-    ]);
-    stmt.dispose();
-  }
+  // static void update({required ShiftTableModel model}) {
+  //   final stmt = CommonSql.db.prepare('''
+  //         UPDATE shift_table
+  //         SET shift_name = ?, show_flag = ?, base_date = ?, order_num = ?
+  //         WHERE id = ?
+  //       ''');
+  //   stmt.execute([
+  //     model.shiftName,
+  //     model.showFlag,
+  //     model.baseDate,
+  //     model.orderNum,
+  //     model.id,
+  //   ]);
+  //   stmt.dispose();
+  // }
 
   // 削除
   static void delete({required int id}) {

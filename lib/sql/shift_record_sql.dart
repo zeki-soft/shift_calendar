@@ -3,38 +3,43 @@ import 'package:shift_calendar/sql/common_sql.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class ShiftRecordSql extends CommonSql {
-  // 新規作成
-  static void insert({required ShiftRecordModel model}) {
+  // 新規作成(更新)
+  static void upsert({required ShiftRecordModel model}) {
     final stmt = CommonSql.db.prepare('''
           INSERT INTO shift_record (shift_table_id, order_num, start_time, end_time, remarks)
           VALUES (?, ?, ?, ?, ?)
+          ON CONFLICT (shift_table_id, order_num) 
+          DO UPDATE SET start_time = ?, end_time = ?, remarks = ?;
         ''');
     stmt.execute([
       model.shiftTableId,
       model.orderNum,
       model.startTime,
       model.endTime,
-      model.remarks
+      model.remarks,
+      model.startTime, // キー重複時
+      model.endTime, // キー重複時
+      model.remarks // キー重複時
     ]);
     stmt.dispose();
   }
 
   // 更新
-  static void update({required ShiftRecordModel model}) {
-    final stmt = CommonSql.db.prepare('''
-          UPDATE shift_record 
-          SET order_num = ?, start_time = ?, end_time = ?, remarks = ?
-          WHERE shift_table_id = ?
-        ''');
-    stmt.execute([
-      model.orderNum,
-      model.startTime,
-      model.endTime,
-      model.remarks,
-      model.shiftTableId
-    ]);
-    stmt.dispose();
-  }
+  // static void update({required ShiftRecordModel model}) {
+  //   final stmt = CommonSql.db.prepare('''
+  //         UPDATE shift_record
+  //         SET order_num = ?, start_time = ?, end_time = ?, remarks = ?
+  //         WHERE shift_table_id = ?
+  //       ''');
+  //   stmt.execute([
+  //     model.orderNum,
+  //     model.startTime,
+  //     model.endTime,
+  //     model.remarks,
+  //     model.shiftTableId
+  //   ]);
+  //   stmt.dispose();
+  // }
 
   // 削除
   static void delete({required int shiftTableId}) {

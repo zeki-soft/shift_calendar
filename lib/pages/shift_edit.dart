@@ -12,7 +12,7 @@ class ShiftEdit extends StatefulWidget {
 }
 
 class _ShiftEditState extends State<ShiftEdit> {
-  final List<ShiftTableModel> listItems = [
+  final List<ShiftTableModel> _listItems = [
     ShiftTableModel(
         id: 1,
         shiftName: 'シフト１',
@@ -24,8 +24,21 @@ class _ShiftEditState extends State<ShiftEdit> {
         shiftName: 'シフト２',
         showFlag: false,
         baseDate: '2024/12/19',
-        orderNum: 2)
+        orderNum: 2),
+    ShiftTableModel(
+        id: 3,
+        shiftName: 'シフト３',
+        showFlag: false,
+        baseDate: '2024/12/19',
+        orderNum: 4),
+    ShiftTableModel(
+        id: 4,
+        shiftName: 'シフト４',
+        showFlag: false,
+        baseDate: '2024/12/19',
+        orderNum: 3)
   ];
+
   @override
   void initState() {
     super.initState();
@@ -45,15 +58,25 @@ class _ShiftEditState extends State<ShiftEdit> {
           _listDataHeader(),
           // シフト一覧
           Expanded(
-              child: ListView.separated(
-            itemCount: listItems.length,
-            itemBuilder: (BuildContext context, int index) {
-              return _listData(listItems[index], index);
-            },
-            // 区切り
-            separatorBuilder: (BuildContext context, int index) =>
-                const Divider(),
-          )),
+            // 入れ替え可能リスト
+            child: ReorderableListView.builder(
+              itemBuilder: (context, index) {
+                return _listData(_listItems[index]);
+              },
+              itemCount: _listItems.length,
+              onReorder: (int oldIndex, int newIndex) {
+                // 入れ替え処理(固定処理)
+                if (oldIndex < newIndex) {
+                  newIndex -= 1;
+                }
+                var item = _listItems.removeAt(oldIndex);
+                _listItems.insert(newIndex, item);
+              },
+              proxyDecorator: (widget, _, __) {
+                return Opacity(opacity: 0.5, child: widget);
+              },
+            ),
+          ),
         ],
       ),
       // 追加ボタン
@@ -94,41 +117,39 @@ class _ShiftEditState extends State<ShiftEdit> {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
-              flex: 6,
+              flex: 7,
               child: Text('シフト名',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
-              flex: 2,
-              child: Text('編集',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
-              flex: 1,
-              child: Text('削除',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.bold))),
         ])));
   }
 
   // シフトデータ
-  Widget _listData(ShiftTableModel shiftData, int index) {
-    return SizedBox(
-        height: 50,
-        child: Container(
-            child: Dismissible(
-                key: Key(index.toString()),
-                onDismissed: (DismissDirection direction) {
-                  // リスト削除処理
-                  // setState(() {
-                  //   items.removeAt(index);
-                  // });
-                },
-                background: Container(
-                  color: Colors.cyan[300],
-                ),
-                child: ListTile(
-                    title: Row(children: [
+  Widget _listData(ShiftTableModel shiftData) {
+    return Card(
+        key: Key(shiftData.id.toString()), // キーで紐づけ
+        child: Dismissible(
+            key: Key(shiftData.id.toString()),
+            onDismissed: (DismissDirection direction) {
+              // リスト削除処理
+              // setState(() {
+              //   items.removeAt(index);
+              // });
+            },
+            background: Container(
+              color: Colors.cyan[300],
+            ),
+            child: ListTile(
+                onTap: () => {
+                      // シフト編集詳細へ遷移
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                ShiftEditDetail(shiftData: shiftData)),
+                      )
+                    },
+                title: Row(children: [
                   // 表示
                   Expanded(
                     flex: 1,
@@ -145,35 +166,11 @@ class _ShiftEditState extends State<ShiftEdit> {
                   ),
                   // シフト名
                   Expanded(
-                      flex: 6,
+                      flex: 7,
                       child: Text(
                         shiftData.shiftName,
                         textAlign: TextAlign.center,
                       )),
-                  // 編集ボタン
-                  Expanded(
-                      flex: 2,
-                      child: IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () {
-                          // シフト編集詳細へ遷移
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    ShiftEditDetail(shiftData: shiftData)),
-                          );
-                        },
-                      )),
-                  // 削除ボタン
-                  Expanded(
-                      flex: 1,
-                      child: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
-                          // ボタンが押された際の動作を記述する
-                        },
-                      )),
-                ])))));
+                ]))));
   }
 }
