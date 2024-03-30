@@ -3,16 +3,16 @@ import 'dart:collection';
 import 'package:table_calendar/table_calendar.dart';
 
 /// カレンダーイベントクラス
-class Event {
+class EventUtils {
   final String title;
 
-  const Event(this.title);
+  const EventUtils(this.title);
 
   @override
   String toString() => title;
 }
 
-final kEvents = LinkedHashMap<DateTime, List<Event>>(
+final kEvents = LinkedHashMap<DateTime, List<EventUtils>>(
   equals: isSameDay,
   hashCode: getHashCode,
 )..addAll(_kEventSource);
@@ -21,7 +21,7 @@ final kEvents = LinkedHashMap<DateTime, List<Event>>(
 final _kEventSource = Map.fromIterable(List.generate(40, (index) => index),
     key: (item) => DateTime.utc(kFirstDay.year, kFirstDay.month, item * 5),
     value: (item) => List.generate(
-        item % 4 + 1, (index) => Event('イベント $item -> ${index + 1}')))
+        item % 4 + 1, (index) => EventUtils('イベント $item -> ${index + 1}')))
   ..addAll({
     // 今日のイベント
     // kToday: [

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shift_calendar/pages/calendar_table.dart';
+import 'package:shift_calendar/pages/shift_edit.dart';
+import 'package:shift_calendar/pages/shift_file.dart';
+import 'package:shift_calendar/sql/common_sql.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,13 +23,10 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
-  // サイドバー選択
-  var _selectMenu = '';
-
   static const List<Tab> myTabs = <Tab>[
-    Tab(text: 'カレンダー'),
-    Tab(text: 'シフト管理'),
-    Tab(text: '設定'),
+    Tab(text: 'シフト表'),
+    Tab(text: '編集'),
+    Tab(text: 'ファイル'),
   ];
 
   late TabController _tabController;
@@ -34,6 +34,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    // タブ生成
     _tabController = TabController(vsync: this, length: myTabs.length);
   }
 
@@ -45,6 +46,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // テーブル生成
+    // CommonSql.create();
     return MaterialApp(
         home: DefaultTabController(
             length: 3,
@@ -63,77 +66,14 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                 children: myTabs.map((Tab tab) {
                   // タブ選択
                   final String label = tab.text!;
-                  if (label == 'カレンダー') {
+                  if (label == 'シフト表') {
                     return CalendarTable();
+                  } else if (label == '編集') {
+                    return ShiftEdit();
                   } else {
-                    return Center(
-                      child: Text(
-                        'This is the $label tab',
-                        style: const TextStyle(fontSize: 36),
-                      ),
-                    );
+                    return ShiftFile();
                   }
                 }).toList(),
-                // サイドメニュー
-                // drawer: ConstrainedBox(
-                //     constraints: BoxConstraints(maxWidth: 250.0),
-                //     child: Drawer(
-                //       child: ListView(
-                //         children: <Widget>[
-                //           const SizedBox(
-                //               height: 65,
-                //               child: DrawerHeader(
-                //                 child: Text(
-                //                   '設定',
-                //                   style: TextStyle(
-                //                     fontSize: 20,
-                //                     color: Colors.white,
-                //                   ),
-                //                 ),
-                //                 decoration: BoxDecoration(
-                //                   color: Colors.blue,
-                //                 ),
-                //               )),
-                //           ListTile(
-                //             title: const Text('追加', style: TextStyle(fontSize: 20)),
-                //             onTap: () {
-                //               setState(() => _selectMenu = 'AAAA Angeles, CA');
-                //               Navigator.pop(context);
-                //             },
-                //           ),
-                //           ListTile(
-                //             title: const Text('Honolulu', style: TextStyle(fontSize: 20)),
-                //             onTap: () {
-                //               setState(() => _selectMenu = 'Honolulu, HI');
-                //               Navigator.pop(context);
-                //             },
-                //           ),
-                //           ListTile(
-                //             title: const Text('Dallas', style: TextStyle(fontSize: 20)),
-                //             onTap: () {
-                //               setState(() => _selectMenu = 'Dallas, TX');
-                //               Navigator.pop(context);
-                //             },
-                //           ),
-                //           ListTile(
-                //             title: const Text('Seattle', style: TextStyle(fontSize: 20)),
-                //             onTap: () {
-                //               setState(() => _selectMenu = 'Seattle, WA');
-                //               Navigator.pop(context);
-                //             },
-                //           ),
-                //           ListTile(
-                //             title: const Text('Tokyo', style: TextStyle(fontSize: 20)),
-                //             onTap: () {
-                //               setState(() => _selectMenu = 'Tokyo, Japan');
-                //               Navigator.pop(context);
-                //             },
-                //           ),
-                //         ],
-                //       ),
-                //     )),
-                // カレンダー表示
-                // body: Center(child: TableEventsCalendar()),
               ),
             )));
   }

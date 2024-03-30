@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:shift_calendar/utils.dart';
+import 'package:shift_calendar/utils/event_utils.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CalendarTable extends StatefulWidget {
@@ -9,7 +8,7 @@ class CalendarTable extends StatefulWidget {
 }
 
 class _CalendarTableState extends State<CalendarTable> {
-  late final ValueNotifier<List<Event>> _selectedEvents; // 選択イベント
+  late final ValueNotifier<List<EventUtils>> _selectedEvents; // 選択イベント
   CalendarFormat _calendarFormat = CalendarFormat.month;
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
   DateTime _focusedDay = DateTime.now();
@@ -31,7 +30,7 @@ class _CalendarTableState extends State<CalendarTable> {
     super.dispose();
   }
 
-  List<Event> _getEventsForDay(DateTime day) {
+  List<EventUtils> _getEventsForDay(DateTime day) {
     // Implementation example
     return kEvents[day] ?? [];
   }
@@ -56,7 +55,7 @@ class _CalendarTableState extends State<CalendarTable> {
     return Scaffold(
       body: Column(
         children: [
-          TableCalendar<Event>(
+          TableCalendar<EventUtils>(
             locale: 'ja_JP', // 日本語
             firstDay: kFirstDay,
             lastDay: kLastDay,
@@ -109,7 +108,7 @@ class _CalendarTableState extends State<CalendarTable> {
           ),
           const SizedBox(height: 8.0),
           Expanded(
-            child: ValueListenableBuilder<List<Event>>(
+            child: ValueListenableBuilder<List<EventUtils>>(
               valueListenable: _selectedEvents,
               builder: (context, value, _) {
                 return ListView.builder(
