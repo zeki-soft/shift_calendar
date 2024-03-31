@@ -24,7 +24,6 @@ class _ShiftDataUtil {
           SELECT 
             T1.id AS id,
             T1.shift_name AS shift_name,
-            T1.show_flag AS show_flag,
             T1.base_date AS base_date,
             T1.order_num AS table_order_num,
             T2.shift_table_id AS shift_table_id,
@@ -33,6 +32,7 @@ class _ShiftDataUtil {
             T2.end_time AS end_time,
             T2.remarks AS remarks
           FROM shift_table T1 LEFT JOIN shift_record T2 ON T1.id = T2.shift_table_id
+          WHERE T1.show_flag = 1
           ORDER BY T1.order_num ASC, T2.order_num ASC;
         ''');
     List<ShiftDataModel> list = [];
@@ -40,7 +40,6 @@ class _ShiftDataUtil {
       ShiftDataModel model = ShiftDataModel(
           id: row["id"],
           shiftName: row["shift_name"],
-          showFlag: row["show_flag"],
           baseDate: row["base_date"],
           tableOrderNum: row["table_order_num"],
           shiftTableId: row['shift_table_id'],

@@ -1,57 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:shift_calendar/model/shift_data_model.dart';
+import 'package:shift_calendar/provider/shift_calendar_provider.dart';
 import 'package:shift_calendar/utils/event_utils.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-class CalendarTable extends StatefulWidget {
-  @override
-  _CalendarTableState createState() => _CalendarTableState();
-}
-
-class _CalendarTableState extends State<CalendarTable> {
-  late final ValueNotifier<List<EventUtils>> _selectedEvents; // 選択イベント
-  CalendarFormat _calendarFormat = CalendarFormat.month;
-  RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
-  DateTime _focusedDay = DateTime.now();
-  DateTime? _selectedDay;
-  DateTime? _rangeStart;
-  DateTime? _rangeEnd;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
-  }
-
-  @override
-  void dispose() {
-    _selectedEvents.dispose();
-    super.dispose();
-  }
+class CalendarTable extends HookConsumerWidget {
+  late ValueNotifier<List<EventUtils>> _selectedEvents; // 選択イベント
+  CalendarFormat _calendarFormat = CalendarFormat.month; // 表示月
+  DateTime _focusedDay = DateTime.now(); // フォーカスは本日固定
 
   List<EventUtils> _getEventsForDay(DateTime day) {
-    // Implementation example
     return kEvents[day] ?? [];
   }
 
-  // 日を選択
-  void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
-    if (!isSameDay(_selectedDay, selectedDay)) {
-      setState(() {
-        _selectedDay = selectedDay;
-        _focusedDay = focusedDay;
-        _rangeStart = null;
-        _rangeEnd = null;
-        _rangeSelectionMode = RangeSelectionMode.toggledOff;
-      });
-
-      _selectedEvents.value = _getEventsForDay(selectedDay);
-    }
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // カレンダーイベント設定
+    var selectedDate = useState<DateTime?>(DateTime.now());
+    // カレンダー取得(監視)
+    List<ShiftDataModel> listItems = ref.watch(shiftCalendarProvider);
+    // カレンダーイベント設定
+    setCalendarEvent(listItems);
+    // イベント設定
+    _selectedEvents = ValueNotifier(_getEventsForDay(selectedDate.value!));
     return Scaffold(
       body: Column(
         children: [
@@ -60,11 +33,8 @@ class _CalendarTableState extends State<CalendarTable> {
             firstDay: kFirstDay,
             lastDay: kLastDay,
             focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            rangeStartDay: _rangeStart,
-            rangeEndDay: _rangeEnd,
+            selectedDayPredicate: (day) => isSameDay(selectedDate.value!, day),
             calendarFormat: _calendarFormat,
-            rangeSelectionMode: _rangeSelectionMode,
             eventLoader: _getEventsForDay,
             startingDayOfWeek: StartingDayOfWeek.sunday,
             calendarStyle: const CalendarStyle(
@@ -73,7 +43,11 @@ class _CalendarTableState extends State<CalendarTable> {
             headerStyle: const HeaderStyle(
               formatButtonVisible: false, // 表示変更不可
             ),
-            onDaySelected: _onDaySelected, // 日を選択
+            onDaySelected: (DateTime selectedDay, DateTime focusedDay) {
+              // 日付選択(カレンダー更新)
+              selectedDate.value = selectedDay;
+              _selectedEvents.value = _getEventsForDay(selectedDay);
+            }, // 日を選択
             calendarBuilders: CalendarBuilders(// 曜日をフォーマット
                 dowBuilder: (_, day) {
               if (day.weekday == DateTime.sunday) {
@@ -81,26 +55,18 @@ class _CalendarTableState extends State<CalendarTable> {
                 return const Center(
                   child: Text(
                     '日',
-                    style: const TextStyle(color: Colors.red),
+                    style: TextStyle(color: Colors.red),
                   ),
                 );
               } else if (day.weekday == DateTime.saturday) {
                 return const Center(
                   child: Text(
                     '土',
-                    style: const TextStyle(color: Colors.blue),
+                    style: TextStyle(color: Colors.blue),
                   ),
                 );
               }
             }),
-            onFormatChanged: (format) {
-              // フォーマット変更
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-              }
-            },
             onPageChanged: (focusedDay) {
               // ページ切り替え
               _focusedDay = focusedDay;

@@ -3,7 +3,6 @@ import 'dart:convert';
 class ShiftDataModel {
   int id;
   String shiftName;
-  bool showFlag;
   String baseDate;
   int tableOrderNum;
   int shiftTableId;
@@ -15,7 +14,6 @@ class ShiftDataModel {
   ShiftDataModel({
     required this.id,
     required this.shiftName,
-    required this.showFlag,
     required this.baseDate,
     required this.tableOrderNum,
     required this.shiftTableId,
@@ -28,7 +26,6 @@ class ShiftDataModel {
   factory ShiftDataModel.fromJson(Map<String, dynamic> json) => ShiftDataModel(
         id: json["id"],
         shiftName: json["shiftName"],
-        showFlag: json["showFlag"],
         baseDate: json["baseDate"],
         tableOrderNum: json["tableOrderNum"],
         shiftTableId: json["shiftTableId"],
@@ -41,7 +38,6 @@ class ShiftDataModel {
   Map<String, dynamic> toJson() => {
         "id": id,
         "shiftName": shiftName,
-        "showFlag": showFlag,
         "baseDate": baseDate,
         "tableOrderNum": tableOrderNum,
         "shiftTableId": shiftTableId,
