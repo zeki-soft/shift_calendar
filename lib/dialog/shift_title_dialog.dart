@@ -8,7 +8,6 @@ import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
-import 'package:shift_calendar/utils/const.dart';
 
 // シフト必須項目編集ダイアログ
 class ShiftTitleDialog extends StatefulWidget {
@@ -58,6 +57,10 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    ShiftTableNotifier shiftTableController =
+        ref.read(shiftTableProvider.notifier);
+    ShiftRecordNotifier shiftRecordController =
+        ref.read(shiftRecordProvider.notifier);
     return AlertDialog(
       insetPadding: const EdgeInsets.all(0), // マージン
       backgroundColor: Colors.white,
@@ -94,8 +97,12 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                         // シフト表DB登録
                         shiftData.shiftName = _shiftNameController.text;
                         shiftData.baseDate = _dateController.text;
-                        ShiftTableSql.upsert(model: shiftData);
-                        if (!updateFlag) {
+                        if (updateFlag) {
+                          // 更新
+                          ShiftTableSql.update(model: shiftData);
+                        } else {
+                          // 新規追加
+                          ShiftTableSql.insert(model: shiftData);
                           // シフトレコードサンプル登録
                           List<ShiftRecordModel> recordList = [
                             ShiftRecordModel(
@@ -120,12 +127,11 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                               remarks: '',
                             ),
                           ];
-                          ShiftRecordSql.upsert(recordList: recordList);
+                          ShiftRecordSql.insert(recordList: recordList);
                         }
                         // シフト編集を更新
-                        Const.editShiftTableId = shiftData.id;
-                        ref.invalidate(shiftRecordProvider);
-                        ref.invalidate(shiftTableProvider);
+                        shiftTableController.update();
+                        shiftRecordController.update(shiftData.id);
                         // ダイアログを閉じる
                         Navigator.pop(context);
                         if (!updateFlag) {
@@ -159,6 +165,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
     );
   }
 
+  // 日付入力テキストフィールド
   TextField CalenderTextField(TextEditingController _date) {
     return TextField(
       controller: _date,
@@ -169,12 +176,12 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
         checkOKFlag();
       },
       decoration: InputDecoration(
-        border: OutlineInputBorder(),
+        border: const OutlineInputBorder(),
         labelText: 'シフト基準日(必須)',
         hintText: 'yyyy/MM/dd',
         // inputの端にカレンダーアイコンをつける
         suffixIcon: IconButton(
-          icon: Icon(Icons.calendar_today),
+          icon: const Icon(Icons.calendar_today),
           onPressed: () async {
             // textFieldがの値からデフォルトの日付を取得する
             DateTime initDate = DateTime.now();
@@ -185,9 +192,9 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
             DateTime? picked = await showDatePicker(
               context: context,
               initialDate: initDate,
-              firstDate: DateTime(2016),
+              firstDate: DateTime(2010),
               lastDate: DateTime.now().add(
-                Duration(days: 360),
+                const Duration(days: 360),
               ),
             );
             // DatePickerで取得した日付を文字列に変換

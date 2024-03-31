@@ -9,7 +9,6 @@ import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
-import 'package:shift_calendar/utils/const.dart';
 
 // シフト編集詳細
 class ShiftEditDetail extends ConsumerWidget {
@@ -19,9 +18,12 @@ class ShiftEditDetail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ShiftTableNotifier shiftTableController =
+        ref.read(shiftTableProvider.notifier);
+    ShiftRecordNotifier shiftRecordController =
+        ref.read(shiftRecordProvider.notifier);
     // シフトレコード全件取得(監視)
-    Const.editShiftTableId = shiftData.id;
-    final listItems = ref.watch(shiftRecordProvider);
+    List<ShiftRecordModel> listItems = ref.watch(shiftRecordProvider);
     if (newFlag) {
       // 新規作成の場合
       Fluttertoast.showToast(
@@ -39,7 +41,7 @@ class ShiftEditDetail extends ConsumerWidget {
         leading: IconButton(
           onPressed: () {
             // 前画面を更新
-            ref.invalidate(shiftTableProvider);
+            shiftTableController.update();
             // 画面を閉じる
             Navigator.pop(context);
           },
@@ -64,7 +66,6 @@ class ShiftEditDetail extends ConsumerWidget {
               if (result != null && result) {
                 // ダイアログを閉じた際の処理
                 print('');
-                // ref.watch(shiftRecordProvider);
               }
             },
             icon: const Icon(Icons.edit),
@@ -78,28 +79,22 @@ class ShiftEditDetail extends ConsumerWidget {
           // シフト詳細
           Expanded(
               // 入れ替え可能リスト
-              child: listItems.when(
-                  error: (err, _) => const Text('Error'), //エラー時
-                  loading: () => const Center(
-                        child: CircularProgressIndicator(),
-                      ), //読み込み時
-                  data: (items) {
-                    return ReorderableListView.builder(
-                        itemBuilder: (context, index) {
-                          return _listData(items[index], index, context, ref);
-                        },
-                        itemCount: items.length,
-                        onReorder: (int oldIndex, int newIndex) {
-                          // 入れ替え処理(固定処理) TODO 禁止
-                          // if (oldIndex < newIndex) {
-                          //   newIndex -= 1;
-                          // }
-                          // var item = items.removeAt(oldIndex);
-                          // items.insert(newIndex, item);
-                        },
-                        proxyDecorator: (widget, _, __) {
-                          return Opacity(opacity: 0.5, child: widget);
-                        });
+              child: ReorderableListView.builder(
+                  itemBuilder: (context, index) {
+                    return _listData(listItems[index], index, context, ref,
+                        shiftRecordController);
+                  },
+                  itemCount: listItems.length,
+                  onReorder: (int oldIndex, int newIndex) {
+                    // 入れ替え処理(固定処理) TODO 禁止
+                    // if (oldIndex < newIndex) {
+                    //   newIndex -= 1;
+                    // }
+                    // var item = items.removeAt(oldIndex);
+                    // items.insert(newIndex, item);
+                  },
+                  proxyDecorator: (widget, _, __) {
+                    return Opacity(opacity: 0.5, child: widget);
                   }))
         ],
       ),
@@ -163,8 +158,8 @@ class ShiftEditDetail extends ConsumerWidget {
   }
 
   // シフトデータ
-  Widget _listData(
-      ShiftRecordModel item, int index, BuildContext context, WidgetRef ref) {
+  Widget _listData(ShiftRecordModel item, int index, BuildContext context,
+      WidgetRef ref, ShiftRecordNotifier shiftRecordController) {
     // シフト基準日を計算
     DateFormat dateFormat = DateFormat('yyyy/MM/dd');
     DateTime date = dateFormat.parseStrict(shiftData.baseDate);
@@ -177,7 +172,7 @@ class ShiftEditDetail extends ConsumerWidget {
               // リスト削除処理
               ShiftRecordSql.delete(
                   shiftTableId: item.shiftTableId, orderNum: item.orderNum);
-              ref.invalidate(shiftRecordProvider);
+              shiftRecordController.update(item.shiftTableId);
             },
             background: Container(
               color: Colors.grey[500],

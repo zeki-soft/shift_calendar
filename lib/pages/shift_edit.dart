@@ -8,14 +8,15 @@ import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
-import 'package:shift_calendar/utils/const.dart';
 
 // シフト編集
 class ShiftEdit extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ShiftRecordNotifier shiftRecordController =
+        ref.read(shiftRecordProvider.notifier);
     // シフト表全件取得(監視)
-    final listItems = ref.watch(shiftTableProvider);
+    List<ShiftTableModel> listItems = ref.watch(shiftTableProvider);
     return Scaffold(
       body: Column(
         children: [
@@ -23,34 +24,27 @@ class ShiftEdit extends ConsumerWidget {
           _listDataHeader(),
           // シフト一覧
           Expanded(
-            // 入れ替え可能リスト
-            child: listItems.when(
-                error: (err, _) => const Text('Error'), //エラー時
-                loading: () => const Center(
-                      child: CircularProgressIndicator(),
-                    ), //読み込み時
-                data: (items) {
-                  return ReorderableListView.builder(
-                    itemBuilder: (context, index) {
-                      return _listData(items[index], context, ref);
-                    },
-                    itemCount: items.length,
-                    onReorder: (int oldIndex, int newIndex) {
-                      // 入れ替え処理(固定処理)
-                      if (oldIndex < newIndex) {
-                        newIndex -= 1;
-                      }
-                      var item = items.removeAt(oldIndex);
-                      items.insert(newIndex, item);
-                      // TODO DB更新?
-                      // ShiftTableSql.upsert(id: shiftData.id);
-                    },
-                    proxyDecorator: (widget, _, __) {
-                      return Opacity(opacity: 0.5, child: widget);
-                    },
-                  );
-                }),
-          ),
+              // 入れ替え可能リスト
+              child: ReorderableListView.builder(
+            itemBuilder: (context, index) {
+              return _listData(
+                  listItems[index], context, ref, shiftRecordController);
+            },
+            itemCount: listItems.length,
+            onReorder: (int oldIndex, int newIndex) {
+              // 入れ替え処理(固定処理)
+              if (oldIndex < newIndex) {
+                newIndex -= 1;
+              }
+              var item = listItems.removeAt(oldIndex);
+              listItems.insert(newIndex, item);
+              // TODO DB更新?
+              // ShiftTableSql.upsert(id: shiftData.id);
+            },
+            proxyDecorator: (widget, _, __) {
+              return Opacity(opacity: 0.5, child: widget);
+            },
+          )),
         ],
       ),
       // 追加ボタン
@@ -99,8 +93,8 @@ class ShiftEdit extends ConsumerWidget {
   }
 
   // シフトデータ
-  Widget _listData(
-      ShiftTableModel shiftData, BuildContext context, WidgetRef ref) {
+  Widget _listData(ShiftTableModel shiftData, BuildContext context,
+      WidgetRef ref, ShiftRecordNotifier shiftRecordController) {
     return Card(
         key: Key(shiftData.id.toString()), // キーで紐づけ
         child: Dismissible(
@@ -109,7 +103,7 @@ class ShiftEdit extends ConsumerWidget {
               // リスト削除処理
               ShiftTableSql.delete(id: shiftData.id);
               ShiftRecordSql.delete(shiftTableId: shiftData.id);
-              ref.invalidate(shiftTableProvider);
+              shiftRecordController.update(shiftData.id);
             },
             background: Container(
               color: Colors.grey[500],
@@ -117,8 +111,7 @@ class ShiftEdit extends ConsumerWidget {
             child: ListTile(
                 onTap: () {
                   // シフト編集を更新
-                  Const.editShiftTableId = shiftData.id;
-                  ref.invalidate(shiftRecordProvider);
+                  shiftRecordController.update(shiftData.id);
                   // シフト編集詳細へ遷移
                   Navigator.push(
                     context,

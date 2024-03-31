@@ -3,14 +3,23 @@ import 'package:shift_calendar/model/shift_data_model.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
 import 'package:sqlite3/sqlite3.dart';
 
-// シフト表データを取得するProvider
-final shiftDataProvider = FutureProvider<dynamic>((ref) {
-  return _ShiftDataUtil().getShiftDataAll();
+// シフトカレンダーを取得するProvider
+final shiftCalendarProvider =
+    StateNotifierProvider<ShiftCalendarNotifier, List<ShiftDataModel>>((ref) {
+  return ShiftCalendarNotifier();
 });
+
+class ShiftCalendarNotifier extends StateNotifier<List<ShiftDataModel>> {
+  ShiftCalendarNotifier() : super([]);
+
+  void update() {
+    state = _ShiftDataUtil().getShiftCalendar();
+  }
+}
 
 class _ShiftDataUtil {
   // シフト表データ全件取得
-  List<ShiftDataModel> getShiftDataAll() {
+  List<ShiftDataModel> getShiftCalendar() {
     final ResultSet resultSet = CommonSql.db.select('''
           SELECT 
             T1.id AS id,

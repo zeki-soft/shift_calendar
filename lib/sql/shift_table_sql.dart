@@ -29,8 +29,8 @@ class ShiftTableSql extends CommonSql {
     return orderNum;
   }
 
-  // 新規作成(更新)
-  static void upsert({required ShiftTableModel model}) {
+  // 新規作成(追加)
+  static void insert({required ShiftTableModel model}) {
     try {
       final stmt = CommonSql.db.prepare('''
           INSERT INTO shift_table (id, shift_name, show_flag, base_date, order_num) VALUES (?, ?, ?, ?, ?)
@@ -48,6 +48,23 @@ class ShiftTableSql extends CommonSql {
     } catch (e) {
       print(e);
     }
+  }
+
+  // 更新
+  static void update({required ShiftTableModel model}) {
+    final stmt = CommonSql.db.prepare('''
+          UPDATE shift_table SET 
+          shift_name = ?, show_flag = ?, base_date = ?, order_num = ?
+          WHERE id = ?
+        ''');
+    stmt.execute([
+      model.shiftName,
+      model.showFlag,
+      model.baseDate,
+      model.orderNum,
+      model.id,
+    ]);
+    stmt.dispose();
   }
 
   // 削除

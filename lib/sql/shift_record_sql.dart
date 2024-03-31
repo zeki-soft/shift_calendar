@@ -17,7 +17,7 @@ class ShiftRecordSql extends CommonSql {
   }
 
   // 新規作成(更新)
-  static void upsert({required List<ShiftRecordModel> recordList}) {
+  static void insert({required List<ShiftRecordModel> recordList}) {
     try {
       final stmt = CommonSql.db.prepare('''
           INSERT INTO shift_record (shift_table_id, order_num, start_time, end_time, remarks)
@@ -38,6 +38,25 @@ class ShiftRecordSql extends CommonSql {
     } catch (e) {
       print(e);
     }
+  }
+
+  // 更新
+  static void update({required List<ShiftRecordModel> recordList}) {
+    final stmt = CommonSql.db.prepare('''
+          UPDATE shift_record SET 
+          order_num = ?, start_time = ?, end_time = ?, remarks = ?
+          WHERE shift_table_id = ?
+        ''');
+    recordList.forEach((data) {
+      stmt.execute([
+        data.orderNum,
+        data.startTime,
+        data.endTime,
+        data.remarks,
+        data.shiftTableId,
+      ]);
+    });
+    stmt.dispose();
   }
 
   // 削除
