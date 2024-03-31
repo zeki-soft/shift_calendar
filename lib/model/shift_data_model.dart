@@ -1,16 +1,16 @@
 import 'dart:convert';
 
 class ShiftDataModel {
-  final int id;
-  final String shiftName;
-  final bool showFlag;
-  final String baseDate;
-  final int tableOrderNum;
-  final int shiftTableId;
-  final int recordOrderNum;
-  final String startTime;
-  final String endTime;
-  final String remarks;
+  int id;
+  String shiftName;
+  bool showFlag;
+  String baseDate;
+  int tableOrderNum;
+  int shiftTableId;
+  int recordOrderNum;
+  String startTime;
+  String endTime;
+  String remarks;
 
   ShiftDataModel({
     required this.id,

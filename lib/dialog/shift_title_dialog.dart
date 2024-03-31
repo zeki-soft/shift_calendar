@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/pages/shift_edit_detail.dart';
+import 'package:shift_calendar/sql/shift_record_sql.dart';
+import 'package:shift_calendar/sql/shift_table_sql.dart';
 
 // シフト必須項目編集ダイアログ
 class ShiftTitleDialog extends StatefulWidget {
@@ -16,7 +19,9 @@ class ShiftTitleDialog extends StatefulWidget {
 
 class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
   ShiftTableModel shiftData;
-  bool updateFlag; // 更新フラグ
+  final bool updateFlag; // 更新フラグ
+  bool _isOkEnabled = false; // 決定ボタン活性フラグ
+
   TextEditingController _shiftNameController =
       TextEditingController(); // シフト名コントローラー
   TextEditingController _dateController =
@@ -24,19 +29,32 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
 
   _ShiftTitleDialogState({required this.shiftData, required this.updateFlag});
 
+  void checkOKFlag() async {
+    setState(() {
+      if (_shiftNameController.text != '' && _dateController.text != '') {
+        // 必須項目が入力済みの場合は決定ボタンを活性化
+        _isOkEnabled = true;
+      } else {
+        _isOkEnabled = false;
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _shiftNameController.text = shiftData.shiftName;
+    _dateController.text = shiftData.baseDate;
+    checkOKFlag();
+  }
+
   @override
   Widget build(BuildContext context) {
-    String title;
-    if (updateFlag) {
-      title = 'シフト表 編集';
-    } else {
-      title = 'シフト表 新規作成';
-    }
     return AlertDialog(
       insetPadding: const EdgeInsets.all(0), // マージン
       backgroundColor: Colors.white,
       title: Text(
-        title,
+        updateFlag ? 'シフト表 編集' : 'シフト表 新規作成',
         style: const TextStyle(color: Colors.black),
       ),
       content: Container(
@@ -52,8 +70,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                 border: OutlineInputBorder(),
               ),
               onChanged: (text) {
-                // 編集完了後
-                print("Current text: $text");
+                checkOKFlag();
               },
             ),
             const SizedBox(height: 20),
@@ -63,19 +80,52 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               // 決定ボタン
               TextButton(
-                onPressed: () {
-                  // DB登録処理
-
-                  // シフト編集詳細へ遷移 TODO
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) =>
-                            ShiftEditDetail(shiftData: shiftData)),
-                  );
-                  // ダイアログを閉じる
-                  Navigator.pop(context);
-                },
+                onPressed: !_isOkEnabled
+                    ? null
+                    : () {
+                        // シフト表DB登録
+                        shiftData.shiftName = _shiftNameController.text;
+                        shiftData.baseDate = _dateController.text;
+                        ShiftTableSql.upsert(model: shiftData);
+                        if (!updateFlag) {
+                          // シフトレコードサンプル登録
+                          List<ShiftRecordModel> recordList = [
+                            ShiftRecordModel(
+                              shiftTableId: shiftData.id,
+                              orderNum: 1,
+                              startTime: '09:30',
+                              endTime: '18:00',
+                              remarks: '',
+                            ),
+                            ShiftRecordModel(
+                              shiftTableId: shiftData.id,
+                              orderNum: 2,
+                              startTime: '10:00',
+                              endTime: '19:00',
+                              remarks: '',
+                            ),
+                            ShiftRecordModel(
+                              shiftTableId: shiftData.id,
+                              orderNum: 3,
+                              startTime: '11:00',
+                              endTime: '20:00',
+                              remarks: '',
+                            ),
+                          ];
+                          ShiftRecordSql.upsert(recordList: recordList);
+                        }
+                        // ダイアログを閉じる
+                        Navigator.pop(context);
+                        if (!updateFlag) {
+                          // シフト編集詳細へ遷移
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ShiftEditDetail(
+                                    shiftData: shiftData, newFlag: true)),
+                          );
+                        }
+                      },
                 child: const Text("決定",
                     style: TextStyle(
                       fontSize: 16,
@@ -103,6 +153,9 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
       textInputAction: TextInputAction.next,
       enabled: true,
       keyboardType: TextInputType.number,
+      onChanged: (text) {
+        checkOKFlag();
+      },
       decoration: InputDecoration(
         border: OutlineInputBorder(),
         labelText: 'シフト基準日(必須)',

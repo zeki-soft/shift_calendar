@@ -1,11 +1,11 @@
 import 'dart:convert';
 
 class ShiftRecordModel {
-  final int shiftTableId;
-  final int orderNum;
-  final String startTime;
-  final String endTime;
-  final String remarks;
+  int shiftTableId;
+  int orderNum;
+  String startTime;
+  String endTime;
+  String remarks;
 
   ShiftRecordModel({
     required this.shiftTableId,

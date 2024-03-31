@@ -1,97 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shift_calendar/dialog/shift_title_dialog.dart';
 import 'package:shift_calendar/dialog/time_edit_dialog.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
+import 'package:shift_calendar/provider/shift_record_provider.dart';
+import 'package:shift_calendar/provider/shift_table_provider.dart';
+import 'package:shift_calendar/sql/shift_record_sql.dart';
+import 'package:shift_calendar/utils/const.dart';
 
 // シフト編集詳細
-class ShiftEditDetail extends StatefulWidget {
+class ShiftEditDetail extends ConsumerWidget {
   ShiftTableModel shiftData;
-  ShiftEditDetail({required this.shiftData});
+  bool newFlag = false;
+  ShiftEditDetail({required this.shiftData, this.newFlag = false});
 
   @override
-  _ShiftEditDetailState createState() =>
-      _ShiftEditDetailState(shiftData: shiftData);
-}
-
-class _ShiftEditDetailState extends State<ShiftEditDetail> {
-  ShiftTableModel shiftData;
-  _ShiftEditDetailState({required this.shiftData});
-  List<ShiftRecordModel> _listItems = [
-    ShiftRecordModel(
-        shiftTableId: 1,
-        orderNum: 1,
-        startTime: '10:00',
-        endTime: '19:00',
-        remarks: '備考１'),
-    ShiftRecordModel(
-        shiftTableId: 1,
-        orderNum: 2,
-        startTime: '10:30',
-        endTime: '19:30',
-        remarks: '備考２'),
-    ShiftRecordModel(
-        shiftTableId: 1,
-        orderNum: 3,
-        startTime: '10:30',
-        endTime: '19:30',
-        remarks: '備考３'),
-  ];
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // シフトレコード全件取得(監視)
+    Const.editShiftTableId = shiftData.id;
+    final listItems = ref.watch(shiftRecordProvider);
+    if (newFlag) {
+      // 新規作成の場合
+      Fluttertoast.showToast(
+          msg: 'サンプルのシフトデータを作成しました。',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0);
+    }
     return Scaffold(
       appBar: AppBar(
-        // 戻るボタン
+        // 戻るボタン(バックボタン?)
         leading: IconButton(
           onPressed: () {
+            // 前画面を更新
+            ref.invalidate(shiftTableProvider);
             // 画面を閉じる
             Navigator.pop(context);
           },
           icon: const Icon(Icons.arrow_back),
         ),
-        // タイトルテキスト
-        title: const Text('シフト名'),
+        // シフト名(タイトル)
+        title: Text(shiftData.shiftName),
         // 右側のアイコン一覧
         actions: <Widget>[
           // シフト名編集ボタン
           IconButton(
-            onPressed: () {
+            onPressed: () async {
               // シフト名、シフト基準日を編集するダイアログ表示
-              showDialog<void>(
+              final result = await showDialog<bool>(
                   barrierColor: Colors.grey.withOpacity(0.8),
                   context: context,
                   barrierDismissible: false,
-                  builder: (_) {
-                    return ShiftTitleDialog(
-                        shiftData: shiftData, updateFlag: true);
-                  });
+                  builder: (context) => PopScope(
+                      canPop: false,
+                      child: ShiftTitleDialog(
+                          shiftData: shiftData, updateFlag: true)));
+              if (result != null && result) {
+                // ダイアログを閉じた際の処理
+                print('');
+                // ref.watch(shiftRecordProvider);
+              }
             },
             icon: const Icon(Icons.edit),
-          ),
-          // シフト削除ボタン
-          IconButton(
-            onPressed: () {
-              // showDialog<void>(
-              //     barrierColor: Colors.grey.withOpacity(0.8),
-              //     context: context,
-              //     barrierDismissible: false,
-              //     builder: (_) {
-              //       return ShiftTitleDialog(
-              //           shiftData: shiftData, updateFlag: true);
-              //     });
-              // 前画面に戻る TODO
-            },
-            icon: const Icon(Icons.delete),
           )
         ],
       ),
@@ -102,33 +77,56 @@ class _ShiftEditDetailState extends State<ShiftEditDetail> {
           // シフト詳細
           Expanded(
               // 入れ替え可能リスト
-              child: ReorderableListView.builder(
-            itemBuilder: (context, index) {
-              return _listData(_listItems[index]);
-            },
-            itemCount: _listItems.length,
-            onReorder: (int oldIndex, int newIndex) {
-              // 入れ替え処理(固定処理)
-              if (oldIndex < newIndex) {
-                newIndex -= 1;
-              }
-              var item = _listItems.removeAt(oldIndex);
-              _listItems.insert(newIndex, item);
-            },
-            proxyDecorator: (widget, _, __) {
-              return Opacity(opacity: 0.5, child: widget);
-            },
-          )),
-          //     ListView.separated(
-          //   itemCount: listItems.length,
-          //   itemBuilder: (BuildContext context, int index) {
-          //     return _listData(listItems[index], index);
-          //   },
-          //   // 区切り
-          //   separatorBuilder: (BuildContext context, int index) =>
-          //       const Divider(),
-          // ))
+              child: listItems.when(
+                  error: (err, _) => const Text('Error'), //エラー時
+                  loading: () => const Center(
+                        child: CircularProgressIndicator(),
+                      ), //読み込み時
+                  data: (items) {
+                    return ReorderableListView.builder(
+                        itemBuilder: (context, index) {
+                          return _listData(items[index], context, ref);
+                        },
+                        itemCount: items.length,
+                        onReorder: (int oldIndex, int newIndex) {
+                          // 入れ替え処理(固定処理) TODO 禁止
+                          // if (oldIndex < newIndex) {
+                          //   newIndex -= 1;
+                          // }
+                          // var item = items.removeAt(oldIndex);
+                          // items.insert(newIndex, item);
+                        },
+                        proxyDecorator: (widget, _, __) {
+                          return Opacity(opacity: 0.5, child: widget);
+                        });
+                  }))
         ],
+      ),
+      // 追加ボタン
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // 新規作成データを生成
+          ShiftRecordModel recordData = ShiftRecordModel(
+              shiftTableId: shiftData.id,
+              orderNum:
+                  ShiftRecordSql.generateOrderNum(shiftTableId: shiftData.id),
+              startTime: '',
+              endTime: '',
+              remarks: '');
+          // シフトレコード(新規作成)のダイアログ表示
+          showDialog<void>(
+              barrierColor: Colors.grey.withOpacity(0.8),
+              context: context,
+              barrierDismissible: false,
+              builder: (_) {
+                return TimeEditDialog(
+                    shiftData: shiftData,
+                    recordData: recordData,
+                    updateFlag: true);
+              });
+        },
+        backgroundColor: Colors.grey[300],
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -163,19 +161,19 @@ class _ShiftEditDetailState extends State<ShiftEditDetail> {
   }
 
   // シフトデータ
-  Widget _listData(ShiftRecordModel item) {
+  Widget _listData(ShiftRecordModel item, BuildContext context, WidgetRef ref) {
     return Card(
         key: Key(item.orderNum.toString()), // キー指定
         child: Dismissible(
             key: Key(item.orderNum.toString()),
             onDismissed: (DismissDirection direction) {
               // リスト削除処理
-              // setState(() {
-              //   items.removeAt(index);
-              // });
+              ShiftRecordSql.delete(
+                  shiftTableId: item.shiftTableId, orderNum: item.orderNum);
+              ref.invalidate(shiftRecordProvider);
             },
             background: Container(
-              color: Colors.cyan[300],
+              color: Colors.grey[500],
             ),
             child: ListTile(
                 onTap: () => {
@@ -185,8 +183,11 @@ class _ShiftEditDetailState extends State<ShiftEditDetail> {
                           context: context,
                           barrierDismissible: false,
                           builder: (_) {
-                            // 時間、備考編集ダイアログ表示
-                            return TimeEditDialog(recordData: item);
+                            // 編集ダイアログ表示
+                            return TimeEditDialog(
+                                shiftData: shiftData,
+                                recordData: item,
+                                updateFlag: false);
                           })
                     },
                 title: Row(children: [

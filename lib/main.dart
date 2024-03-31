@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shift_calendar/pages/calendar_table.dart';
 import 'package:shift_calendar/pages/shift_edit.dart';
@@ -14,7 +15,8 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  initializeDateFormatting('ja').then((_) => runApp(MyApp()));
+  initializeDateFormatting('ja')
+      .then((_) => runApp(ProviderScope(child: MyApp())));
 }
 
 class MyApp extends StatefulWidget {

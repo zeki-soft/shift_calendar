@@ -1,13 +1,11 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
-
 class ShiftTableModel {
-  final int id;
-  final String shiftName;
-  final bool showFlag;
-  final String baseDate;
-  final int orderNum;
+  int id;
+  String shiftName;
+  bool showFlag;
+  String baseDate;
+  int orderNum;
 
   ShiftTableModel({
     required this.id,

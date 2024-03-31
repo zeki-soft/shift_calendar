@@ -18,9 +18,10 @@ class CommonSql {
         db.execute('''
           CREATE TABLE IF NOT EXISTS shift_table (
             id INTEGER NOT NULL PRIMARY KEY,
-            shift_name TEXT NOT NULL,
-            base_date TEXT NOT NULL,
-            order_num INTEGER NOT NULL
+            shift_name TEXT,
+            show_flag BOOLEAN,
+            base_date TEXT,
+            order_num INTEGER
           );
         ''');
         // シフトレコードCREATE
@@ -30,7 +31,7 @@ class CommonSql {
             order_num INTEGER NOT NULL,
             start_time TEXT,
             end_time TEXT,
-            comment TEXT,
+            remarks TEXT,
             PRIMARY KEY (shift_table_id, order_num)
           );
         ''');

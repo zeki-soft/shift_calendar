@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
+import 'package:shift_calendar/model/shift_table_model.dart';
+import 'package:shift_calendar/sql/shift_record_sql.dart';
 
 // シフト時間、備考編集ダイアログ TODO
 class TimeEditDialog extends StatefulWidget {
+  ShiftTableModel shiftData;
   ShiftRecordModel recordData;
-  TimeEditDialog({required this.recordData});
+  bool updateFlag;
+  TimeEditDialog(
+      {required this.shiftData,
+      required this.recordData,
+      required this.updateFlag});
 
   @override
-  _TimeEditDialogState createState() =>
-      _TimeEditDialogState(recordData: recordData);
+  _TimeEditDialogState createState() => _TimeEditDialogState(
+      shiftData: shiftData, recordData: recordData, updateFlag: updateFlag);
 }
 
 class _TimeEditDialogState extends State<TimeEditDialog> {
+  ShiftTableModel shiftData;
   ShiftRecordModel recordData;
+  bool updateFlag;
   TextEditingController _startTimeController =
       TextEditingController(); // 開始時間コントローラー
   TextEditingController _endTimeController =
@@ -20,16 +29,20 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
   TextEditingController _remarksController =
       TextEditingController(); // 備考コントローラー
 
-  _TimeEditDialogState({required this.recordData});
+  _TimeEditDialogState(
+      {required this.shiftData,
+      required this.recordData,
+      required this.updateFlag});
 
   @override
   Widget build(BuildContext context) {
+    String baseData = shiftData.baseDate;
     return AlertDialog(
-      insetPadding: const EdgeInsets.all(0), // マージン
+      insetPadding: const EdgeInsets.all(0),
       backgroundColor: Colors.white,
-      title: const Text(
-        'シフト時間 編集',
-        style: TextStyle(color: Colors.black),
+      title: Text(
+        updateFlag ? '$baseData 追加' : '$baseData 編集',
+        style: const TextStyle(color: Colors.black),
       ),
       content: Container(
           width: 300,
@@ -79,8 +92,17 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               // 決定ボタン
               TextButton(
-                onPressed: () {},
-                child: const Text("決定",
+                onPressed: () {
+                  // シフトレコードDB登録/更新
+                  ShiftRecordModel model = ShiftRecordModel(
+                      shiftTableId: recordData.shiftTableId,
+                      orderNum: recordData.orderNum,
+                      startTime: _startTimeController.text,
+                      endTime: _endTimeController.text,
+                      remarks: _remarksController.text);
+                  ShiftRecordSql.upsert(recordList: [model]);
+                },
+                child: const Text('決定',
                     style: TextStyle(
                       fontSize: 16,
                     )),

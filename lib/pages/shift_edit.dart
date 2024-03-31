@@ -1,56 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shift_calendar/dialog/shift_title_dialog.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/pages/shift_edit_detail.dart';
+import 'package:shift_calendar/provider/shift_table_provider.dart';
+import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
 
 // シフト編集
-class ShiftEdit extends StatefulWidget {
+class ShiftEdit extends ConsumerWidget {
   @override
-  _ShiftEditState createState() => _ShiftEditState();
-}
-
-class _ShiftEditState extends State<ShiftEdit> {
-  final List<ShiftTableModel> _listItems = [
-    ShiftTableModel(
-        id: 1,
-        shiftName: 'シフト１',
-        showFlag: true,
-        baseDate: '2024/10/01',
-        orderNum: 1),
-    ShiftTableModel(
-        id: 2,
-        shiftName: 'シフト２',
-        showFlag: false,
-        baseDate: '2024/12/19',
-        orderNum: 2),
-    ShiftTableModel(
-        id: 3,
-        shiftName: 'シフト３',
-        showFlag: false,
-        baseDate: '2024/12/19',
-        orderNum: 4),
-    ShiftTableModel(
-        id: 4,
-        shiftName: 'シフト４',
-        showFlag: false,
-        baseDate: '2024/12/19',
-        orderNum: 3)
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // シフト表全件取得(監視)
+    final listItems = ref.watch(shiftTableProvider);
     return Scaffold(
       body: Column(
         children: [
@@ -59,23 +22,32 @@ class _ShiftEditState extends State<ShiftEdit> {
           // シフト一覧
           Expanded(
             // 入れ替え可能リスト
-            child: ReorderableListView.builder(
-              itemBuilder: (context, index) {
-                return _listData(_listItems[index]);
-              },
-              itemCount: _listItems.length,
-              onReorder: (int oldIndex, int newIndex) {
-                // 入れ替え処理(固定処理)
-                if (oldIndex < newIndex) {
-                  newIndex -= 1;
-                }
-                var item = _listItems.removeAt(oldIndex);
-                _listItems.insert(newIndex, item);
-              },
-              proxyDecorator: (widget, _, __) {
-                return Opacity(opacity: 0.5, child: widget);
-              },
-            ),
+            child: listItems.when(
+                error: (err, _) => const Text('Error'), //エラー時
+                loading: () => const Center(
+                      child: CircularProgressIndicator(),
+                    ), //読み込み時
+                data: (items) {
+                  return ReorderableListView.builder(
+                    itemBuilder: (context, index) {
+                      return _listData(items[index], context, ref);
+                    },
+                    itemCount: items.length,
+                    onReorder: (int oldIndex, int newIndex) {
+                      // 入れ替え処理(固定処理)
+                      if (oldIndex < newIndex) {
+                        newIndex -= 1;
+                      }
+                      var item = items.removeAt(oldIndex);
+                      items.insert(newIndex, item);
+                      // TODO DB更新?
+                      // ShiftTableSql.upsert(id: shiftData.id);
+                    },
+                    proxyDecorator: (widget, _, __) {
+                      return Opacity(opacity: 0.5, child: widget);
+                    },
+                  );
+                }),
           ),
         ],
       ),
@@ -125,19 +97,20 @@ class _ShiftEditState extends State<ShiftEdit> {
   }
 
   // シフトデータ
-  Widget _listData(ShiftTableModel shiftData) {
+  Widget _listData(
+      ShiftTableModel shiftData, BuildContext context, WidgetRef ref) {
     return Card(
         key: Key(shiftData.id.toString()), // キーで紐づけ
         child: Dismissible(
             key: Key(shiftData.id.toString()),
             onDismissed: (DismissDirection direction) {
               // リスト削除処理
-              // setState(() {
-              //   items.removeAt(index);
-              // });
+              ShiftTableSql.delete(id: shiftData.id);
+              ShiftRecordSql.delete(shiftTableId: shiftData.id);
+              ref.invalidate(shiftTableProvider);
             },
             background: Container(
-              color: Colors.cyan[300],
+              color: Colors.grey[500],
             ),
             child: ListTile(
                 onTap: () => {

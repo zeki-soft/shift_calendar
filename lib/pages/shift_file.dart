@@ -15,7 +15,29 @@ class _ShiftFileState extends State<ShiftFile> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 100),
+            const SizedBox(height: 150),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Text('ファイル入力',
+                    style: TextStyle(
+                      fontSize: 16,
+                    )),
+                Text(
+                  'ファイル出力',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  'ファイル連携',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -31,16 +53,14 @@ class _ShiftFileState extends State<ShiftFile> {
                   tooltip: 'ファイル出力',
                   child: const Icon(Icons.file_download),
                 ),
+                // ファイル連携
+                FloatingActionButton(
+                  onPressed: inputFileAction,
+                  tooltip: 'ファイル連携',
+                  child: const Icon(Icons.file_present),
+                ),
               ],
             ),
-            const SizedBox(height: 5),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Text('ファイル入力'),
-                Text('ファイル出力'),
-              ],
-            )
           ],
         ),
       ),

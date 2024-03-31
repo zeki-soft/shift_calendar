@@ -6,9 +6,7 @@ class ShiftTableSql extends CommonSql {
   // ID生成
   static int generateId() {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT 
-          IFNULL(MAX(id), 0) AS id
-        FROM shift_table
+        SELECT IFNULL(MAX(id), 0) AS id FROM shift_table
         ''');
     int id = 0;
     if (resultSet.isNotEmpty) {
@@ -21,9 +19,7 @@ class ShiftTableSql extends CommonSql {
   // 順番生成
   static int generateOrderNum() {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT 
-          IFNULL(MAX(order_num), 0) AS order_num
-        FROM shift_table
+        SELECT IFNULL(MAX(order_num), 0) AS order_num FROM shift_table
         ''');
     int orderNum = 0;
     if (resultSet.isNotEmpty) {
@@ -35,41 +31,24 @@ class ShiftTableSql extends CommonSql {
 
   // 新規作成(更新)
   static void upsert({required ShiftTableModel model}) {
-    final stmt = CommonSql.db.prepare('''
-          INSERT INTO shift_table (id, shift_name, show_flag, base_date, order_num) VALUES (?, ?, ?, ?)
+    try {
+      final stmt = CommonSql.db.prepare('''
+          INSERT INTO shift_table (id, shift_name, show_flag, base_date, order_num) VALUES (?, ?, ?, ?, ?)
           ON CONFLICT (id) 
-          DO UPDATE SET shift_name = ?, show_flag = ?, base_date = ?, order_num = ?;
+          DO UPDATE SET shift_name = shift_table.shift_name, show_flag = shift_table.show_flag, base_date = shift_table.base_date, order_num = shift_table.order_num;
         ''');
-    stmt.execute([
-      model.id,
-      model.shiftName,
-      model.showFlag,
-      model.baseDate,
-      model.orderNum,
-      model.shiftName, // キー重複
-      model.showFlag, // キー重複
-      model.baseDate, // キー重複
-      model.orderNum, // キー重複
-    ]);
-    stmt.dispose();
+      stmt.execute([
+        model.id,
+        model.shiftName,
+        model.showFlag,
+        model.baseDate,
+        model.orderNum,
+      ]);
+      stmt.dispose();
+    } catch (e) {
+      print(e);
+    }
   }
-
-  // 更新
-  // static void update({required ShiftTableModel model}) {
-  //   final stmt = CommonSql.db.prepare('''
-  //         UPDATE shift_table
-  //         SET shift_name = ?, show_flag = ?, base_date = ?, order_num = ?
-  //         WHERE id = ?
-  //       ''');
-  //   stmt.execute([
-  //     model.shiftName,
-  //     model.showFlag,
-  //     model.baseDate,
-  //     model.orderNum,
-  //     model.id,
-  //   ]);
-  //   stmt.dispose();
-  // }
 
   // 削除
   static void delete({required int id}) {
@@ -83,8 +62,7 @@ class ShiftTableSql extends CommonSql {
   // 1件取得
   static ShiftTableModel? getShiftTable({required int id}) {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT id, shift_name, show_flag, base_date, order_num
-        FROM shift_table WHERE id = ?
+        SELECT id, shift_name, show_flag, base_date, order_num FROM shift_table WHERE id = ?
         ''', [id]);
 
     ShiftTableModel? model;
@@ -102,20 +80,24 @@ class ShiftTableSql extends CommonSql {
 
   // 全件取得
   static List<ShiftTableModel> getShiftTableAll() {
-    final ResultSet resultSet = CommonSql.db.select('''
-        SELECT id, shift_name, show_flag, base_date, order_num
-        FROM shift_table
+    try {
+      final ResultSet resultSet = CommonSql.db.select('''
+        SELECT id, shift_name, show_flag, base_date, order_num FROM shift_table
         ''');
-    List<ShiftTableModel> list = [];
-    for (Row row in resultSet) {
-      ShiftTableModel model = ShiftTableModel(
-          id: row['id'],
-          shiftName: row['shift_name'],
-          showFlag: row['show_flag'],
-          baseDate: row['base_date'],
-          orderNum: row['order_num']);
-      list.add(model);
+      List<ShiftTableModel> list = [];
+      for (Row row in resultSet) {
+        ShiftTableModel model = ShiftTableModel(
+            id: row['id'],
+            shiftName: row['shift_name'],
+            showFlag: row['show_flag'] == 1,
+            baseDate: row['base_date'],
+            orderNum: row['order_num']);
+        list.add(model);
+      }
+      return list;
+    } catch (e) {
+      print(e);
+      return [];
     }
-    return list;
   }
 }

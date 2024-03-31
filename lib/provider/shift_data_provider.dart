@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shift_calendar/model/shift_data_model.dart';
-import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
 import 'package:sqlite3/sqlite3.dart';
 
-// 譜面データを取得するProvider
+// シフト表データを取得するProvider
 final shiftDataProvider = FutureProvider<dynamic>((ref) {
   return _ShiftDataUtil().getShiftDataAll();
 });
