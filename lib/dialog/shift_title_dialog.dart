@@ -1,24 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/pages/shift_edit_detail.dart';
+import 'package:shift_calendar/provider/shift_record_provider.dart';
+import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
+import 'package:shift_calendar/utils/const.dart';
 
 // シフト必須項目編集ダイアログ
 class ShiftTitleDialog extends StatefulWidget {
   ShiftTableModel shiftData;
+  WidgetRef ref;
   bool updateFlag;
-  ShiftTitleDialog({required this.shiftData, required this.updateFlag});
+  ShiftTitleDialog(
+      {required this.shiftData, required this.ref, required this.updateFlag});
 
   @override
-  _ShiftTitleDialogState createState() =>
-      _ShiftTitleDialogState(shiftData: shiftData, updateFlag: updateFlag);
+  _ShiftTitleDialogState createState() => _ShiftTitleDialogState(
+      shiftData: shiftData, ref: ref, updateFlag: updateFlag);
 }
 
 class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
   ShiftTableModel shiftData;
+  WidgetRef ref;
   final bool updateFlag; // 更新フラグ
   bool _isOkEnabled = false; // 決定ボタン活性フラグ
 
@@ -27,7 +34,8 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
   TextEditingController _dateController =
       TextEditingController(); // シフト基準日コントローラー
 
-  _ShiftTitleDialogState({required this.shiftData, required this.updateFlag});
+  _ShiftTitleDialogState(
+      {required this.shiftData, required this.ref, required this.updateFlag});
 
   void checkOKFlag() async {
     setState(() {
@@ -114,6 +122,10 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                           ];
                           ShiftRecordSql.upsert(recordList: recordList);
                         }
+                        // シフト編集を更新
+                        Const.editShiftTableId = shiftData.id;
+                        ref.invalidate(shiftRecordProvider);
+                        ref.invalidate(shiftTableProvider);
                         // ダイアログを閉じる
                         Navigator.pop(context);
                         if (!updateFlag) {

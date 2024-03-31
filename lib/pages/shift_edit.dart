@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import 'package:shift_calendar/dialog/shift_title_dialog.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/pages/shift_edit_detail.dart';
+import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
+import 'package:shift_calendar/utils/const.dart';
 
 // シフト編集
 class ShiftEdit extends ConsumerWidget {
@@ -68,7 +70,7 @@ class ShiftEdit extends ConsumerWidget {
               barrierDismissible: false,
               builder: (_) {
                 return ShiftTitleDialog(
-                    shiftData: shiftData, updateFlag: false);
+                    shiftData: shiftData, ref: ref, updateFlag: false);
               });
         },
         backgroundColor: Colors.grey[300],
@@ -84,8 +86,8 @@ class ShiftEdit extends ConsumerWidget {
         child: const ListTile(
             title: Row(children: [
           Expanded(
-              flex: 1,
-              child: Text('表示',
+              flex: 2,
+              child: Text('シフト表示',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
@@ -113,19 +115,22 @@ class ShiftEdit extends ConsumerWidget {
               color: Colors.grey[500],
             ),
             child: ListTile(
-                onTap: () => {
-                      // シフト編集詳細へ遷移
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                ShiftEditDetail(shiftData: shiftData)),
-                      )
-                    },
+                onTap: () {
+                  // シフト編集を更新
+                  Const.editShiftTableId = shiftData.id;
+                  ref.invalidate(shiftRecordProvider);
+                  // シフト編集詳細へ遷移
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            ShiftEditDetail(shiftData: shiftData)),
+                  );
+                },
                 title: Row(children: [
-                  // 表示
+                  // シフト表示
                   Expanded(
-                    flex: 1,
+                    flex: 2,
                     child: Checkbox(
                       activeColor: Colors.blue,
                       value: shiftData.showFlag, // チェックフラグ

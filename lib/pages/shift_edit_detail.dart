@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 import 'package:shift_calendar/dialog/shift_title_dialog.dart';
 import 'package:shift_calendar/dialog/time_edit_dialog.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
@@ -25,10 +26,10 @@ class ShiftEditDetail extends ConsumerWidget {
       // 新規作成の場合
       Fluttertoast.showToast(
           msg: 'サンプルのシフトデータを作成しました。',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.CENTER,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
+          // toastLength: Toast.LENGTH_LONG,
+          // gravity: ToastGravity.CENTER,
+          // timeInSecForIosWeb: 3,
+          // backgroundColor: Colors.red,
           textColor: Colors.white,
           fontSize: 16.0);
     }
@@ -59,7 +60,7 @@ class ShiftEditDetail extends ConsumerWidget {
                   builder: (context) => PopScope(
                       canPop: false,
                       child: ShiftTitleDialog(
-                          shiftData: shiftData, updateFlag: true)));
+                          shiftData: shiftData, ref: ref, updateFlag: true)));
               if (result != null && result) {
                 // ダイアログを閉じた際の処理
                 print('');
@@ -85,7 +86,7 @@ class ShiftEditDetail extends ConsumerWidget {
                   data: (items) {
                     return ReorderableListView.builder(
                         itemBuilder: (context, index) {
-                          return _listData(items[index], context, ref);
+                          return _listData(items[index], index, context, ref);
                         },
                         itemCount: items.length,
                         onReorder: (int oldIndex, int newIndex) {
@@ -122,6 +123,7 @@ class ShiftEditDetail extends ConsumerWidget {
                 return TimeEditDialog(
                     shiftData: shiftData,
                     recordData: recordData,
+                    ref: ref,
                     updateFlag: true);
               });
         },
@@ -139,7 +141,7 @@ class ShiftEditDetail extends ConsumerWidget {
             title: Row(children: [
           Expanded(
               flex: 2,
-              child: Text('日付',
+              child: Text('シフト基準日',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontWeight: FontWeight.bold))),
           Expanded(
@@ -161,7 +163,12 @@ class ShiftEditDetail extends ConsumerWidget {
   }
 
   // シフトデータ
-  Widget _listData(ShiftRecordModel item, BuildContext context, WidgetRef ref) {
+  Widget _listData(
+      ShiftRecordModel item, int index, BuildContext context, WidgetRef ref) {
+    // シフト基準日を計算
+    DateFormat dateFormat = DateFormat('yyyy/MM/dd');
+    DateTime date = dateFormat.parseStrict(shiftData.baseDate);
+    String baseDate = dateFormat.format(date.add(Duration(days: index)));
     return Card(
         key: Key(item.orderNum.toString()), // キー指定
         child: Dismissible(
@@ -187,26 +194,37 @@ class ShiftEditDetail extends ConsumerWidget {
                             return TimeEditDialog(
                                 shiftData: shiftData,
                                 recordData: item,
+                                ref: ref,
                                 updateFlag: false);
                           })
                     },
                 title: Row(children: [
                   Expanded(
-                      flex: 1,
+                      // シフト基準日
+                      flex: 2,
                       child: Text(
-                        shiftData.baseDate, // TODO 基準日から計算
+                        baseDate,
                         textAlign: TextAlign.center,
                       )),
                   Expanded(
+                      // 開始時間
                       flex: 1,
                       child: Text(
                         item.startTime,
                         textAlign: TextAlign.center,
                       )),
                   Expanded(
+                      // 終了時間
                       flex: 1,
                       child: Text(
                         item.endTime,
+                        textAlign: TextAlign.center,
+                      )),
+                  Expanded(
+                      // 備考
+                      flex: 4,
+                      child: Text(
+                        item.remarks,
                         textAlign: TextAlign.center,
                       )),
                 ]))));

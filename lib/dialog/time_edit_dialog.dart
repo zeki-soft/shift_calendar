@@ -1,26 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
+import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
+import 'package:shift_calendar/utils/const.dart';
 
-// シフト時間、備考編集ダイアログ TODO
+// シフト時間、備考編集ダイアログ
 class TimeEditDialog extends StatefulWidget {
   ShiftTableModel shiftData;
   ShiftRecordModel recordData;
+  WidgetRef ref;
   bool updateFlag;
   TimeEditDialog(
       {required this.shiftData,
       required this.recordData,
+      required this.ref,
       required this.updateFlag});
 
   @override
   _TimeEditDialogState createState() => _TimeEditDialogState(
-      shiftData: shiftData, recordData: recordData, updateFlag: updateFlag);
+      shiftData: shiftData,
+      recordData: recordData,
+      ref: ref,
+      updateFlag: updateFlag);
 }
 
 class _TimeEditDialogState extends State<TimeEditDialog> {
   ShiftTableModel shiftData;
   ShiftRecordModel recordData;
+  WidgetRef ref;
   bool updateFlag;
   TextEditingController _startTimeController =
       TextEditingController(); // 開始時間コントローラー
@@ -32,6 +41,7 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
   _TimeEditDialogState(
       {required this.shiftData,
       required this.recordData,
+      required this.ref,
       required this.updateFlag});
 
   @override
@@ -101,6 +111,11 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
                       endTime: _endTimeController.text,
                       remarks: _remarksController.text);
                   ShiftRecordSql.upsert(recordList: [model]);
+                  // シフト編集を更新
+                  Const.editShiftTableId = shiftData.id;
+                  ref.invalidate(shiftRecordProvider);
+                  // ダイアログを閉じる
+                  Navigator.pop(context);
                 },
                 child: const Text('決定',
                     style: TextStyle(

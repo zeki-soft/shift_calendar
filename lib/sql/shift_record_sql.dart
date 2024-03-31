@@ -6,7 +6,7 @@ class ShiftRecordSql extends CommonSql {
   // 順番号生成
   static int generateOrderNum({required int shiftTableId}) {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT IFNULL(MAX(order_num), 0) order_num id FROM shift_record WHERE shift_table_id = ?
+        SELECT IFNULL(MAX(order_num), 0) AS order_num FROM shift_record WHERE shift_table_id = ?
         ''', [shiftTableId]);
     int orderNum = 0;
     if (resultSet.isNotEmpty) {
