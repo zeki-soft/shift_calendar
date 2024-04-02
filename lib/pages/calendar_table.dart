@@ -1,106 +1,114 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:shift_calendar/model/shift_data_model.dart';
-import 'package:shift_calendar/provider/shift_calendar_provider.dart';
-import 'package:shift_calendar/utils/event_utils.dart';
-import 'package:table_calendar/table_calendar.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-class CalendarTable extends HookConsumerWidget {
-  late ValueNotifier<List<EventUtils>> _selectedEvents; // 選択イベント
-  CalendarFormat _calendarFormat = CalendarFormat.month; // 表示月
-  DateTime _focusedDay = DateTime.now(); // フォーカスは本日固定
+class CalendarApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: SfCalendar(
+          view: CalendarView.schedule,
+          headerDateFormat: 'yyyy年MM月',
+          dataSource: MeetingDataSource(_getDataSource()),
+          scheduleViewSettings: const ScheduleViewSettings(
+              // 月ヘッダー
+              monthHeaderSettings: MonthHeaderSettings(
+                  monthFormat: 'yyyy年MM月',
+                  height: 100,
+                  textAlign: TextAlign.center,
+                  backgroundColor: Colors.blue,
+                  monthTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w400)),
+              // 週ヘッダー（無し）
+              weekHeaderSettings: WeekHeaderSettings(
+                  height: 0,
+                  weekTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w100,
+                      fontSize: 0)),
+              // 日ヘッダー
+              dayHeaderSettings: DayHeaderSettings(
+                  dayFormat: 'EEE',
+                  width: 60,
+                  // 曜日フォーマット
+                  dayTextStyle:
+                      TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  // 日フォーマット
+                  dateTextStyle:
+                      TextStyle(fontSize: 22, fontWeight: FontWeight.w400)))),
+    );
+  }
+}
 
-  List<EventUtils> _getEventsForDay(DateTime day) {
-    return kEvents[day] ?? [];
+List<Meeting> _getDataSource() {
+  final List<Meeting> meetings = <Meeting>[];
+  final DateTime today = DateTime.now();
+  final DateTime startTime =
+      DateTime(today.year, today.month, today.day, 9, 0, 0);
+  final DateTime endTime = startTime.add(const Duration(hours: 2));
+  meetings
+      .add(Meeting('シフトA', startTime, endTime, const Color(0xFF0F8644), false));
+
+  for (int i = 0; i < 28; i++) {
+    final DateTime today1 = DateTime(2024, 04, 01);
+    final DateTime startTime1 =
+        DateTime(today1.year, today1.month, today1.day + i, 9, 0, 0);
+    final DateTime endTime1 = startTime1.add(const Duration(hours: 3));
+    meetings.add(Meeting('シフトB', startTime1, endTime1, Colors.blue, false));
+  }
+  // final DateTime today2 = DateTime(2024, 01, 24);
+  // final DateTime startTime2 =
+  //     DateTime(today2.year, today2.month, today2.day, 9, 0, 0);
+  // final DateTime endTime2 = startTime2.add(const Duration(hours: 3));
+  // meetings.add(Meeting('シフトC', startTime2, endTime2, Colors.red, false));
+
+  // final DateTime today3 = DateTime(2024, 01, 26);
+  // final DateTime startTime3 =
+  //     DateTime(today3.year, today3.month, today3.day, 9, 0, 0);
+  // final DateTime endTime3 = startTime3.add(const Duration(hours: 3));
+  // meetings.add(Meeting('シフトD', startTime3, endTime3, Colors.yellow, false));
+
+  return meetings;
+}
+
+class MeetingDataSource extends CalendarDataSource {
+  MeetingDataSource(List<Meeting> source) {
+    appointments = source;
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // カレンダーイベント設定
-    var selectedDate = useState<DateTime?>(DateTime.now());
-    // カレンダー取得(監視)
-    List<ShiftDataModel> listItems = ref.watch(shiftCalendarProvider);
-    // カレンダーイベント設定
-    setCalendarEvent(listItems);
-    // イベント設定
-    _selectedEvents = ValueNotifier(_getEventsForDay(selectedDate.value!));
-    return Scaffold(
-      body: Column(
-        children: [
-          TableCalendar<EventUtils>(
-            locale: 'ja_JP', // 日本語
-            firstDay: kFirstDay,
-            lastDay: kLastDay,
-            focusedDay: _focusedDay,
-            selectedDayPredicate: (day) => isSameDay(selectedDate.value!, day),
-            calendarFormat: _calendarFormat,
-            eventLoader: _getEventsForDay,
-            startingDayOfWeek: StartingDayOfWeek.sunday,
-            calendarStyle: const CalendarStyle(
-              outsideDaysVisible: false,
-            ),
-            headerStyle: const HeaderStyle(
-              formatButtonVisible: false, // 表示変更不可
-            ),
-            onDaySelected: (DateTime selectedDay, DateTime focusedDay) {
-              // 日付選択(カレンダー更新)
-              selectedDate.value = selectedDay;
-              _selectedEvents.value = _getEventsForDay(selectedDay);
-            }, // 日を選択
-            calendarBuilders: CalendarBuilders(// 曜日をフォーマット
-                dowBuilder: (_, day) {
-              if (day.weekday == DateTime.sunday) {
-                // 日曜
-                return const Center(
-                  child: Text(
-                    '日',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                );
-              } else if (day.weekday == DateTime.saturday) {
-                return const Center(
-                  child: Text(
-                    '土',
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                );
-              }
-            }),
-            onPageChanged: (focusedDay) {
-              // ページ切り替え
-              _focusedDay = focusedDay;
-            },
-          ),
-          const SizedBox(height: 8.0),
-          Expanded(
-            child: ValueListenableBuilder<List<EventUtils>>(
-              valueListenable: _selectedEvents,
-              builder: (context, value, _) {
-                return ListView.builder(
-                  itemCount: value.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 4.0,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: ListTile(
-                        onTap: () => print('${value[index]}'),
-                        title: Text('${value[index]}'),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+  DateTime getStartTime(int index) {
+    return appointments![index].from;
   }
+
+  @override
+  DateTime getEndTime(int index) {
+    return appointments![index].to;
+  }
+
+  @override
+  String getSubject(int index) {
+    return appointments![index].eventName;
+  }
+
+  @override
+  Color getColor(int index) {
+    return appointments![index].background;
+  }
+
+  @override
+  bool isAllDay(int index) {
+    return appointments![index].isAllDay;
+  }
+}
+
+class Meeting {
+  Meeting(this.eventName, this.from, this.to, this.background, this.isAllDay);
+
+  String eventName;
+  DateTime from;
+  DateTime to;
+  Color background;
+  bool isAllDay;
 }

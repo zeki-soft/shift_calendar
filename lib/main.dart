@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:shift_calendar/pages/calendar_table.dart';
 import 'package:shift_calendar/pages/shift_edit.dart';
 import 'package:shift_calendar/pages/shift_file.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
+
+import 'pages/calendar_table.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -68,7 +70,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                     // タブ選択
                     final String label = tab.text!;
                     if (label == 'カレンダー') {
-                      return CalendarTable();
+                      // return CalendarApp(); // TODO
+                      return CalendarApp();
                     } else if (label == 'シフト編集') {
                       return ShiftEdit();
                     } else {

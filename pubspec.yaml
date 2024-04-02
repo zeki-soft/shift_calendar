@@ -33,7 +33,7 @@ dependencies:
 
   # パッケージ
   intl: ^0.18.0
-  table_calendar: ^3.0.9
+  syncfusion_flutter_calendar: ^25.1.38
   flutter_riverpod: ^2.4.9
   hooks_riverpod: ^2.5.1
   flutter_hooks: ^0.20.5
