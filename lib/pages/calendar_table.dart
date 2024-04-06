@@ -10,39 +10,62 @@ class CalendarTable extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // シフト表全件取得(監視)
     List<ShiftDataModel> listItems = ref.watch(shiftCalendarProvider);
-    return Container(
-      child: SfCalendar(
-          view: CalendarView.schedule,
-          headerDateFormat: 'yyyy年MM月',
-          dataSource: MeetingDataSource(_getDataSource(listItems)),
-          scheduleViewSettings: const ScheduleViewSettings(
-              // 月ヘッダー
-              monthHeaderSettings: MonthHeaderSettings(
-                  monthFormat: 'yyyy年MM月',
-                  height: 100,
-                  textAlign: TextAlign.center,
-                  backgroundColor: Colors.blue,
-                  monthTextStyle: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w400)),
-              // 週ヘッダー（無し）
-              weekHeaderSettings: WeekHeaderSettings(
-                  height: 0,
-                  weekTextStyle: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w100,
-                      fontSize: 0)),
-              // 日ヘッダー
-              dayHeaderSettings: DayHeaderSettings(
-                  dayFormat: 'EEE',
-                  width: 60,
-                  // 曜日フォーマット
-                  dayTextStyle:
-                      TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                  // 日フォーマット
-                  dateTextStyle:
-                      TextStyle(fontSize: 22, fontWeight: FontWeight.w400)))),
+    return Scaffold(
+      body: Container(
+        child: SfCalendar(
+            view: CalendarView.schedule,
+            headerDateFormat: 'yyyy年MM月',
+            dataSource: MeetingDataSource(_getDataSource(listItems)),
+            scheduleViewSettings: const ScheduleViewSettings(
+                // 月ヘッダー
+                monthHeaderSettings: MonthHeaderSettings(
+                    monthFormat: 'yyyy年MM月',
+                    height: 100,
+                    textAlign: TextAlign.center,
+                    backgroundColor: Colors.blue,
+                    monthTextStyle: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w400)),
+                // 週ヘッダー（無し）
+                weekHeaderSettings: WeekHeaderSettings(
+                    height: 0,
+                    weekTextStyle: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w100,
+                        fontSize: 0)),
+                // 日ヘッダー
+                dayHeaderSettings: DayHeaderSettings(
+                    dayFormat: 'EEE',
+                    width: 60,
+                    // 曜日フォーマット
+                    dayTextStyle:
+                        TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                    // 日フォーマット
+                    dateTextStyle:
+                        TextStyle(fontSize: 22, fontWeight: FontWeight.w400)))),
+      ),
+      // 検索ボタン
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          // DatePickerを表示する
+          DateTime? picked = await showDatePicker(
+            context: context,
+            locale: const Locale("ja"),
+            initialDate: DateTime.now(),
+            firstDate: DateTime(2010),
+            lastDate: DateTime.now().add(
+              const Duration(days: 1000),
+            ),
+          );
+          try {
+            String formatedDate = DateFormat('yyyy/MM/dd').format(picked!);
+            // TODO カレンダー移動？
+          } catch (_) {}
+        },
+        backgroundColor: Colors.grey[300],
+        child: const Icon(Icons.search),
+      ),
     );
   }
 }

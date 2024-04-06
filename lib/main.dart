@@ -5,12 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shift_calendar/pages/calendar_table.dart';
 import 'package:shift_calendar/pages/shift_edit.dart';
 import 'package:shift_calendar/pages/shift_file.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart';
-
-import 'pages/calendar_table.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +19,9 @@ void main() async {
     DeviceOrientation.portraitUp,
   ]);
 
-  initializeDateFormatting('ja')
-      .then((_) => runApp(ProviderScope(child: MyApp())));
+  runApp(ProviderScope(child: MyApp()));
+  // initializeDateFormatting('ja')
+  //     .then((_) => runApp(ProviderScope(child: MyApp())));
 }
 
 class MyApp extends StatefulWidget {
@@ -60,32 +60,41 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             // DB初期化
             CommonSql.init(snapshot.data!);
             return MaterialApp(
-                home: DefaultTabController(
-                    length: 3,
-                    child: Scaffold(
-                        // ヘッダー
-                        appBar: PreferredSize(
-                            preferredSize: const Size.fromHeight(50.0),
-                            child: AppBar(
-                              bottom: TabBar(
-                                controller: _tabController,
-                                tabs: myTabs,
-                              ),
-                            )),
-                        body: TabBarView(
-                          controller: _tabController,
-                          children: myTabs.map((Tab tab) {
-                            // タブ選択
-                            final String label = tab.text!;
-                            if (label == 'カレンダー') {
-                              return CalendarTable();
-                            } else if (label == 'シフト編集') {
-                              return ShiftEdit();
-                            } else {
-                              return ShiftFile();
-                            }
-                          }).toList(),
-                        ))));
+              home: DefaultTabController(
+                  length: 3,
+                  child: Scaffold(
+                      // ヘッダー
+                      appBar: PreferredSize(
+                          preferredSize: const Size.fromHeight(50.0),
+                          child: AppBar(
+                            bottom: TabBar(
+                              controller: _tabController,
+                              tabs: myTabs,
+                            ),
+                          )),
+                      body: TabBarView(
+                        controller: _tabController,
+                        children: myTabs.map((Tab tab) {
+                          // タブ選択
+                          final String label = tab.text!;
+                          if (label == 'カレンダー') {
+                            return CalendarTable();
+                          } else if (label == 'シフト編集') {
+                            return ShiftEdit();
+                          } else {
+                            return ShiftFile();
+                          }
+                        }).toList(),
+                      ))),
+              localizationsDelegates: [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale("ja"),
+              ],
+            );
           } else {
             return CircularProgressIndicator();
           }
