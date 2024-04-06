@@ -1,5 +1,6 @@
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
+import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class ShiftTableSql extends CommonSql {
@@ -67,12 +68,40 @@ class ShiftTableSql extends CommonSql {
     stmt.dispose();
   }
 
+  // 更新
+  static void updateList({required List<ShiftTableModel> list}) {
+    final stmt = CommonSql.db.prepare('''
+          UPDATE shift_table SET 
+          shift_name = ?, show_flag = ?, base_date = ?, order_num = ?
+          WHERE id = ?
+        ''');
+    list.forEach((data) {
+      stmt.execute([
+        data.shiftName,
+        data.showFlag,
+        data.baseDate,
+        data.orderNum,
+        data.id
+      ]);
+    });
+    stmt.dispose();
+  }
+
+  // 表示フラグオフ
+  static void offShowFlag() {
+    final stmt =
+        CommonSql.db.prepare('UPDATE shift_table SET show_flag = false');
+    stmt.execute();
+    stmt.dispose();
+  }
+
   // 削除
   static void delete({required int id}) {
-    final stmt = CommonSql.db.prepare('''
-          DELETE FROM shift_table WHERE id = ?
-        ''');
+    // 削除処理
+    var stmt = CommonSql.db.prepare('DELETE FROM shift_table WHERE id = ?');
     stmt.execute([id]);
+    // 子テーブルを削除
+    ShiftRecordSql.delete(shiftTableId: id);
     stmt.dispose();
   }
 

@@ -13,6 +13,8 @@ import 'package:shift_calendar/sql/shift_table_sql.dart';
 
 // シフト編集
 class ShiftEdit extends ConsumerWidget {
+  int _selectValue = 0; // ラジオボタン選択値
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // シフト表全件取得(監視)
@@ -23,6 +25,16 @@ class ShiftEdit extends ConsumerWidget {
         ref.read(shiftTableProvider.notifier);
     ShiftRecordNotifier shiftRecordController =
         ref.read(shiftRecordProvider.notifier);
+
+    // ラジオボタン初期選択値
+    _selectValue = 0;
+    listItems.forEach((item) {
+      if (item.showFlag) {
+        _selectValue = item.orderNum;
+        return;
+      }
+    });
+
     return Scaffold(
       body: Column(
         children: [
@@ -33,8 +45,14 @@ class ShiftEdit extends ConsumerWidget {
               // 入れ替え可能リスト
               child: ReorderableListView.builder(
             itemBuilder: (context, index) {
-              return _listData(listItems[index], context, ref,
-                  shiftCalendarController, shiftRecordController);
+              return _listData(
+                  listItems,
+                  index,
+                  context,
+                  ref,
+                  shiftCalendarController,
+                  shiftTableController,
+                  shiftRecordController);
             },
             itemCount: listItems.length,
             onReorder: (int oldIndex, int newIndex) {
@@ -60,11 +78,13 @@ class ShiftEdit extends ConsumerWidget {
       // 追加ボタン
       floatingActionButton: FloatingActionButton(
         onPressed: () {
+          // 新規ID取得
+          int id = ShiftTableSql.generateId();
           // 新規作成データを生成
           ShiftTableModel shiftData = ShiftTableModel(
-              id: ShiftTableSql.generateId(), // 新規ID取得
+              id: id, // 新規ID取得
               shiftName: '新規シフト',
-              showFlag: true,
+              showFlag: id == 0, // 初回のみ対象
               baseDate: DateFormat('yyyy/MM/dd').format(DateTime.now()),
               orderNum: ShiftTableSql.generateOrderNum());
           // シフト編集詳細へ遷移(新規作成)のダイアログ表示
@@ -106,11 +126,14 @@ class ShiftEdit extends ConsumerWidget {
 
   // シフトデータ
   Widget _listData(
-      ShiftTableModel shiftData,
+      List<ShiftTableModel> itemList,
+      int index,
       BuildContext context,
       WidgetRef ref,
       ShiftCalendarNotifier shiftCalendarController,
+      ShiftTableNotifier shiftTableController,
       ShiftRecordNotifier shiftRecordController) {
+    ShiftTableModel shiftData = itemList[index];
     return Card(
         key: Key(shiftData.id.toString()), // キーで紐づけ
         child: Dismissible(
@@ -118,7 +141,14 @@ class ShiftEdit extends ConsumerWidget {
             onDismissed: (DismissDirection direction) {
               // リスト削除処理
               ShiftTableSql.delete(id: shiftData.id);
-              ShiftRecordSql.delete(shiftTableId: shiftData.id);
+              // 順番を更新
+              List<ShiftTableModel> items = ShiftTableSql.getShiftTableAll();
+              // 順番を更新
+              for (int i = 0; i < items.length; i++) {
+                items[i].orderNum = i;
+              }
+              ShiftTableSql.updateList(list: items);
+              // 画面を更新
               shiftCalendarController.update();
               shiftRecordController.update(shiftData.id);
               // メッセージ
@@ -170,16 +200,20 @@ class ShiftEdit extends ConsumerWidget {
                   // シフト表示
                   Expanded(
                     flex: 2,
-                    child: Checkbox(
-                      activeColor: Colors.blue,
-                      value: shiftData.showFlag, // チェックフラグ
-                      onChanged: (flag) {
-                        // ボタンが押された際の動作を記述する
-                        if (flag!) {
-                          print(flag);
-                        }
-                      },
-                    ),
+                    child: Radio(
+                        value: shiftData.orderNum,
+                        groupValue: _selectValue,
+                        onChanged: (value) {
+                          _selectValue = value!;
+                          // 表示フラグOFF
+                          ShiftTableSql.offShowFlag();
+                          // 表示フラグ更新
+                          shiftData.showFlag = true;
+                          ShiftTableSql.update(model: shiftData);
+                          // 画面更新処理
+                          shiftCalendarController.update();
+                          shiftTableController.update();
+                        }),
                   ),
                   // シフト名
                   Expanded(

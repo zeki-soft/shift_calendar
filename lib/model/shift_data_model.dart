@@ -8,6 +8,7 @@ class ShiftDataModel {
   int recordOrderNum;
   String startTime;
   String endTime;
+  bool holidayFlag;
 
   ShiftDataModel({
     required this.id,
@@ -17,6 +18,7 @@ class ShiftDataModel {
     required this.recordOrderNum,
     required this.startTime,
     required this.endTime,
+    required this.holidayFlag,
   });
 
   factory ShiftDataModel.fromJson(Map<String, dynamic> json) => ShiftDataModel(
@@ -27,6 +29,7 @@ class ShiftDataModel {
         recordOrderNum: json["recordOrderNum"],
         startTime: json["startTime"],
         endTime: json["endTime"],
+        holidayFlag: json["holidayFlag"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -37,6 +40,7 @@ class ShiftDataModel {
         "recordOrderNum": recordOrderNum,
         "startTime": startTime,
         "endTime": endTime,
+        "holidayFlag": holidayFlag,
       };
 }
 

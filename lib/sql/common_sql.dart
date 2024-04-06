@@ -29,6 +29,7 @@ class CommonSql {
             order_num INTEGER NOT NULL,
             start_time TEXT,
             end_time TEXT,
+            holiday_flag BOOLEAN,
             PRIMARY KEY (shift_table_id, order_num)
           );
         ''');

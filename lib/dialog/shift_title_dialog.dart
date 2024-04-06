@@ -102,18 +102,21 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                           orderNum: 0,
                           startTime: '09:00',
                           endTime: '18:00',
+                          holidayFlag: false,
                         ),
                         ShiftRecordModel(
                           shiftTableId: shiftData.id,
                           orderNum: 1,
-                          startTime: '10:00',
-                          endTime: '19:00',
+                          startTime: '12:00',
+                          endTime: '21:00',
+                          holidayFlag: false,
                         ),
                         ShiftRecordModel(
                           shiftTableId: shiftData.id,
                           orderNum: 2,
-                          startTime: '11:00',
-                          endTime: '20:00',
+                          startTime: '15:00',
+                          endTime: '24:00',
+                          holidayFlag: false,
                         ),
                       ];
                       ShiftRecordSql.insert(recordList: recordList);
@@ -124,12 +127,18 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                     // ダイアログを閉じる
                     Navigator.pop(context);
                     if (!updateFlag) {
+                      // 新規作成の場合
+                      Fluttertoast.showToast(
+                          msg: '【${shiftData.shiftName}】\nサンプルのシフト時間を作成しました。',
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
+                          fontSize: 16.0);
                       // シフト編集詳細へ遷移
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ShiftEditDetail(
-                                shiftData: shiftData, newFlag: true)),
+                            builder: (context) =>
+                                ShiftEditDetail(shiftData: shiftData)),
                       );
                     }
                   } else {
@@ -143,7 +152,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                         fontSize: 16.0);
                   }
                 },
-                child: const Text("決定",
+                child: const Text('決定',
                     style: TextStyle(
                       fontSize: 16,
                     )),

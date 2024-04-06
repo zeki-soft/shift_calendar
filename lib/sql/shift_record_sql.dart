@@ -20,10 +20,10 @@ class ShiftRecordSql extends CommonSql {
   static void insert({required List<ShiftRecordModel> recordList}) {
     try {
       final stmt = CommonSql.db.prepare('''
-          INSERT INTO shift_record (shift_table_id, order_num, start_time, end_time)
-          VALUES (?, ?, ?, ?)
+          INSERT INTO shift_record (shift_table_id, order_num, start_time, end_time, holiday_flag)
+          VALUES (?, ?, ?, ?, ?)
           ON CONFLICT (shift_table_id, order_num) 
-          DO UPDATE SET start_time = shift_record.start_time, end_time = shift_record.end_time
+          DO UPDATE SET start_time = shift_record.start_time, end_time = shift_record.end_time, holiday_flag = shift_record.holiday_flag
         ''');
       recordList.forEach((data) {
         stmt.execute([
@@ -31,6 +31,7 @@ class ShiftRecordSql extends CommonSql {
           data.orderNum,
           data.startTime,
           data.endTime,
+          data.holidayFlag,
         ]);
       });
       stmt.dispose();
@@ -42,22 +43,28 @@ class ShiftRecordSql extends CommonSql {
   // 更新
   static void update({required List<ShiftRecordModel> recordList}) {
     final stmt = CommonSql.db.prepare('''
-          UPDATE shift_record SET start_time = ?, end_time = ?
+          UPDATE shift_record SET start_time = ?, end_time = ?, holiday_flag = ?
           WHERE shift_table_id = ? AND order_num = ?
         ''');
     recordList.forEach((data) {
-      stmt.execute(
-          [data.startTime, data.endTime, data.shiftTableId, data.orderNum]);
+      stmt.execute([
+        data.startTime,
+        data.endTime,
+        data.holidayFlag,
+        data.shiftTableId,
+        data.orderNum
+      ]);
     });
     stmt.dispose();
   }
 
   // 削除
   static void delete({required int shiftTableId, int? orderNum}) {
+    // 削除処理
     String sql = orderNum == null
         ? 'DELETE FROM shift_record WHERE shift_table_id = ?'
         : 'DELETE FROM shift_record WHERE shift_table_id = ? AND order_num = ?';
-    final stmt = CommonSql.db.prepare(sql);
+    var stmt = CommonSql.db.prepare(sql);
     stmt.execute(orderNum == null ? [shiftTableId] : [shiftTableId, orderNum]);
     stmt.dispose();
   }
@@ -68,7 +75,7 @@ class ShiftRecordSql extends CommonSql {
     ShiftRecordModel? model;
     try {
       final ResultSet resultSet = CommonSql.db.select('''
-        SELECT shift_table_id, order_num, start_time, end_time
+        SELECT shift_table_id, order_num, start_time, end_time, holiday_flag
         FROM shift_record WHERE shift_table_id = ? AND order_num = ?
         ''', [shiftTableId, orderNum]);
       if (resultSet.isNotEmpty) {
@@ -77,7 +84,8 @@ class ShiftRecordSql extends CommonSql {
             shiftTableId: row['shift_table_id'],
             orderNum: row['order_num'],
             startTime: row['start_time'],
-            endTime: row['end_time']);
+            endTime: row['end_time'],
+            holidayFlag: row['holiday_flag'] == 1);
       }
     } catch (e) {
       print(e);
@@ -89,7 +97,7 @@ class ShiftRecordSql extends CommonSql {
   static List<ShiftRecordModel> getShiftRecordAll({required int shiftTableId}) {
     try {
       final ResultSet resultSet = CommonSql.db.select('''
-        SELECT shift_table_id, order_num, start_time, end_time
+        SELECT shift_table_id, order_num, start_time, end_time, holiday_flag
         FROM shift_record WHERE shift_table_id = ?;
         ''', [shiftTableId]);
       List<ShiftRecordModel> list = [];
@@ -98,7 +106,8 @@ class ShiftRecordSql extends CommonSql {
             shiftTableId: row['shift_table_id'],
             orderNum: row['order_num'],
             startTime: row['start_time'],
-            endTime: row['end_time']);
+            endTime: row['end_time'],
+            holidayFlag: row['holiday_flag'] == 1);
         list.add(model);
       }
       return list;

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/provider/shift_record_provider.dart';
+import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 
 // シフト時間、備考編集ダイアログ
@@ -46,24 +47,29 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
   @override
   void initState() {
     super.initState();
+    // 入力初期値
     _startTimeController.text = recordData.startTime;
     _endTimeController.text = recordData.endTime;
   }
 
   @override
   Widget build(BuildContext context) {
+    ShiftTableNotifier shiftTableController =
+        ref.read(shiftTableProvider.notifier);
     ShiftRecordNotifier shiftRecordController =
         ref.read(shiftRecordProvider.notifier);
     // シフト基準日
-    DateTime baseDate = DateFormat("yyyy/MM/dd")
+    DateFormat dateFormat = DateFormat('yyyy/MM/dd');
+    DateTime baseDate = dateFormat
         .parseStrict(shiftData.baseDate)
-        .add(Duration(days: shiftData.orderNum));
+        .add(Duration(days: recordData.orderNum));
+    String baseDateStr = dateFormat.format(baseDate);
 
     return AlertDialog(
       insetPadding: const EdgeInsets.all(0),
       backgroundColor: Colors.white,
       title: Text(
-        'シフト基準日: $baseDate',
+        'シフト基準日: $baseDateStr',
         style: const TextStyle(color: Colors.black, fontSize: 20),
       ),
       content: Container(
@@ -71,30 +77,46 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
           height: 220,
           child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
             // 開始時間入力
-            TimeTextField(_startTimeController),
+            TimeTextField(_startTimeController, '開始時間'),
             const SizedBox(height: 20),
             // 終了時間入力
-            TimeTextField(_endTimeController),
+            TimeTextField(_endTimeController, '終了時間'),
             const SizedBox(height: 20),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               // 決定ボタン
               TextButton(
                 onPressed: () {
-                  // シフトレコードDB登録/更新
-                  ShiftRecordModel model = ShiftRecordModel(
-                      shiftTableId: recordData.shiftTableId,
-                      orderNum: recordData.orderNum,
-                      startTime: _startTimeController.text,
-                      endTime: _endTimeController.text);
-                  if (updateFlag) {
-                    ShiftRecordSql.update(recordList: [model]);
+                  // 入力チェック
+                  final regTime = RegExp(r'^([01][0-9]|2[0-3]):[0-5][0-9]$');
+                  bool checkFlag =
+                      regTime.hasMatch(_startTimeController.text) &&
+                          regTime.hasMatch(_endTimeController.text);
+                  if (checkFlag) {
+                    // シフトレコードDB登録/更新
+                    ShiftRecordModel model = ShiftRecordModel(
+                        shiftTableId: recordData.shiftTableId,
+                        orderNum: recordData.orderNum,
+                        startTime: _startTimeController.text,
+                        endTime: _endTimeController.text,
+                        holidayFlag: false);
+                    if (updateFlag) {
+                      ShiftRecordSql.update(recordList: [model]);
+                    } else {
+                      ShiftRecordSql.insert(recordList: [model]);
+                    }
+                    // シフト編集を更新
+                    shiftTableController.update();
+                    shiftRecordController.update(shiftData.id);
+                    // ダイアログを閉じる
+                    Navigator.pop(context);
                   } else {
-                    ShiftRecordSql.insert(recordList: [model]);
+                    // 入力チェックエラー
+                    Fluttertoast.showToast(
+                        msg: '開始時間または終了時間の形式が不正です。',
+                        backgroundColor: Colors.black,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
                   }
-                  // シフト編集を更新
-                  shiftRecordController.update(shiftData.id);
-                  // ダイアログを閉じる
-                  Navigator.pop(context);
                 },
                 child: const Text('決定',
                     style: TextStyle(
@@ -118,7 +140,7 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
   }
 
   // 日付入力テキストフィールド
-  TextField TimeTextField(TextEditingController _time) {
+  TextField TimeTextField(TextEditingController _time, String label) {
     TimeOfDay selectedTime = TimeOfDay.now();
     return TextField(
       controller: _time,
@@ -130,7 +152,7 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
       },
       decoration: InputDecoration(
         border: const OutlineInputBorder(),
-        labelText: '開始時間',
+        labelText: label,
         hintText: 'hh/mm',
         // inputの端に時計アイコンをつける
         suffixIcon: IconButton(
@@ -143,8 +165,9 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
             );
             // TimePickerで取得した時間を文字列に変換
             if (picked != null) {
+              // ゼロ埋め編集
               _time.text =
-                  '${picked.hour.toString()}:${picked.minute.toString()}';
+                  '${picked.hour.toString().padLeft(2, '0')}:${picked.minute.toString().padLeft(2, '0')}';
             }
           },
         ),

@@ -14,8 +14,7 @@ import 'package:shift_calendar/sql/shift_record_sql.dart';
 // シフト編集詳細
 class ShiftEditDetail extends ConsumerWidget {
   ShiftTableModel shiftData;
-  bool newFlag = false;
-  ShiftEditDetail({required this.shiftData, this.newFlag = false});
+  ShiftEditDetail({required this.shiftData});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,14 +26,7 @@ class ShiftEditDetail extends ConsumerWidget {
         ref.read(shiftRecordProvider.notifier);
     // シフトレコード全件取得(監視)
     List<ShiftRecordModel> listItems = ref.watch(shiftRecordProvider);
-    if (newFlag) {
-      // 新規作成の場合
-      Fluttertoast.showToast(
-          msg: '【${shiftData.shiftName}】\nサンプルのシフト時間を作成しました。',
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0);
-    }
+
     return Scaffold(
       appBar: AppBar(
         // 戻るボタン(バックボタン?)
@@ -82,14 +74,8 @@ class ShiftEditDetail extends ConsumerWidget {
               // 入れ替え可能リスト
               child: ReorderableListView.builder(
                   itemBuilder: (context, index) {
-                    return _listData(
-                        shiftData,
-                        listItems[index],
-                        index,
-                        context,
-                        ref,
-                        shiftCalendarController,
-                        shiftRecordController);
+                    return _listData(shiftData, listItems, index, context, ref,
+                        shiftCalendarController, shiftRecordController);
                   },
                   itemCount: listItems.length,
                   onReorder: (int oldIndex, int newIndex) {
@@ -119,7 +105,8 @@ class ShiftEditDetail extends ConsumerWidget {
               orderNum:
                   ShiftRecordSql.generateOrderNum(shiftTableId: shiftData.id),
               startTime: '',
-              endTime: '');
+              endTime: '',
+              holidayFlag: false);
           // シフトレコード(新規作成)のダイアログ表示
           showDialog<void>(
               barrierColor: Colors.grey.withOpacity(0.8),
@@ -130,7 +117,7 @@ class ShiftEditDetail extends ConsumerWidget {
                     shiftData: shiftData,
                     recordData: recordData,
                     ref: ref,
-                    updateFlag: true);
+                    updateFlag: false);
               });
         },
         backgroundColor: Colors.grey[300],
@@ -146,20 +133,26 @@ class ShiftEditDetail extends ConsumerWidget {
         child: const ListTile(
             title: Row(children: [
           Expanded(
-              flex: 1,
+              flex: 2,
               child: Text('シフト基準日',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold))),
           Expanded(
-              flex: 1,
+              flex: 2,
               child: Text('開始時間',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold))),
           Expanded(
-              flex: 1,
+              flex: 2,
               child: Text('終了時間',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold))),
+          Expanded(
+              flex: 1,
+              child: Text('休日',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Colors.white, fontWeight: FontWeight.bold))),
@@ -169,7 +162,7 @@ class ShiftEditDetail extends ConsumerWidget {
   // シフトデータ
   Widget _listData(
       ShiftTableModel shiftData,
-      ShiftRecordModel item,
+      List<ShiftRecordModel> itemList,
       int index,
       BuildContext context,
       WidgetRef ref,
@@ -179,6 +172,7 @@ class ShiftEditDetail extends ConsumerWidget {
     DateFormat dateFormat = DateFormat('yyyy/MM/dd');
     DateTime date = dateFormat.parseStrict(shiftData.baseDate);
     String baseDate = dateFormat.format(date.add(Duration(days: index)));
+    ShiftRecordModel item = itemList[index];
     return Card(
         key: Key(item.orderNum.toString()), // キー指定
         child: Dismissible(
@@ -187,6 +181,14 @@ class ShiftEditDetail extends ConsumerWidget {
               // リスト削除処理
               ShiftRecordSql.delete(
                   shiftTableId: item.shiftTableId, orderNum: item.orderNum);
+              // 順番を更新
+              List<ShiftRecordModel> items = ShiftRecordSql.getShiftRecordAll(
+                  shiftTableId: item.shiftTableId);
+              for (int i = 0; i < items.length; i++) {
+                items[i].orderNum = i;
+              }
+              ShiftRecordSql.update(recordList: items);
+              // 画面を更新
               shiftCalendarController.update();
               shiftRecordController.update(item.shiftTableId);
               // メッセージ
@@ -224,42 +226,61 @@ class ShiftEditDetail extends ConsumerWidget {
             ),
             child: ListTile(
                 onTap: () => {
-                      // シフト時間、備考を編集
-                      showDialog<void>(
-                          barrierColor: Colors.grey.withOpacity(0.8),
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) {
-                            // 編集ダイアログ表示
-                            return TimeEditDialog(
-                                shiftData: shiftData,
-                                recordData: item,
-                                ref: ref,
-                                updateFlag: false);
-                          })
+                      // 休日でない場合のみ
+                      if (!item.holidayFlag)
+                        {
+                          // シフト時間を編集
+                          showDialog<void>(
+                              barrierColor: Colors.grey.withOpacity(0.8),
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (_) {
+                                // 編集ダイアログ表示
+                                return TimeEditDialog(
+                                    shiftData: shiftData,
+                                    recordData: item,
+                                    ref: ref,
+                                    updateFlag: true);
+                              })
+                        }
                     },
                 title: Row(children: [
                   Expanded(
                       // シフト基準日
-                      flex: 1,
+                      flex: 2,
                       child: Text(
                         baseDate,
                         textAlign: TextAlign.center,
                       )),
                   Expanded(
                       // 開始時間
-                      flex: 1,
+                      flex: 2,
                       child: Text(
-                        item.startTime,
+                        item.holidayFlag ? '' : item.startTime,
                         textAlign: TextAlign.center,
                       )),
                   Expanded(
                       // 終了時間
-                      flex: 1,
+                      flex: 2,
                       child: Text(
-                        item.endTime,
+                        item.holidayFlag ? '' : item.endTime,
                         textAlign: TextAlign.center,
                       )),
+                  Expanded(
+                    // 休日
+                    flex: 1,
+                    child: Checkbox(
+                        activeColor: Colors.blue,
+                        value: item.holidayFlag,
+                        onChanged: (flag) {
+                          // DB更新処理
+                          item.holidayFlag = flag!;
+                          ShiftRecordSql.update(recordList: [item]);
+                          // 前画面を更新
+                          shiftCalendarController.update();
+                          shiftRecordController.update(item.shiftTableId);
+                        }),
+                  ),
                 ]))));
   }
 }

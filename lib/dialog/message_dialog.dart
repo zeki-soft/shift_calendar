@@ -16,10 +16,10 @@ class MessageDialog extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Text(message,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                     )),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 TextButton(
                     onPressed: () {
                       // ダイアログを閉じる

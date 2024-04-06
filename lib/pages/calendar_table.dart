@@ -6,139 +6,96 @@ import 'package:shift_calendar/provider/shift_calendar_provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class CalendarTable extends ConsumerWidget {
+  final calendarController = CalendarController();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // シフト表全件取得(監視)
     List<ShiftDataModel> listItems = ref.watch(shiftCalendarProvider);
+    // シフト名
+    String shiftName = '';
+    if (listItems.isNotEmpty) {
+      shiftName = listItems[0].shiftName;
+    }
+
     return Scaffold(
-      body: Container(
-        child: SfCalendar(
-            view: CalendarView.schedule,
-            headerDateFormat: 'yyyy年MM月',
-            dataSource: MeetingDataSource(_getDataSource(listItems)),
-            scheduleViewSettings: const ScheduleViewSettings(
-                // 月ヘッダー
-                monthHeaderSettings: MonthHeaderSettings(
-                    monthFormat: 'yyyy年MM月',
-                    height: 100,
-                    textAlign: TextAlign.center,
-                    backgroundColor: Colors.blue,
-                    monthTextStyle: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w400)),
-                // 週ヘッダー（無し）
-                weekHeaderSettings: WeekHeaderSettings(
-                    height: 0,
-                    weekTextStyle: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w100,
-                        fontSize: 0)),
-                // 日ヘッダー
-                dayHeaderSettings: DayHeaderSettings(
-                    dayFormat: 'EEE',
-                    width: 60,
-                    // 曜日フォーマット
-                    dayTextStyle:
-                        TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                    // 日フォーマット
-                    dateTextStyle:
-                        TextStyle(fontSize: 22, fontWeight: FontWeight.w400)))),
+        body: Container(
+      child: SfCalendar(
+        view: CalendarView.month,
+        showNavigationArrow: true,
+        monthViewSettings: const MonthViewSettings(
+            showTrailingAndLeadingDates: true, // 前月、次月表示
+            appointmentDisplayCount: 3, // イベント表示数
+            appointmentDisplayMode: MonthAppointmentDisplayMode.appointment,
+            showAgenda: false, // イベント表示
+            monthCellStyle: MonthCellStyle(
+                // セルのスタイル
+                textStyle: TextStyle(
+                    // 今月
+                    fontStyle: FontStyle.normal,
+                    fontSize: 15,
+                    color: Colors.black),
+                trailingDatesTextStyle: TextStyle(
+                    // 前月
+                    fontStyle: FontStyle.normal,
+                    fontSize: 15,
+                    color: Colors.grey),
+                leadingDatesTextStyle: TextStyle(
+                    // 次月
+                    fontStyle: FontStyle.normal,
+                    fontSize: 15,
+                    color: Colors.grey))),
+        headerDateFormat: 'yyyy年MM月 ${shiftName}',
+        controller: calendarController,
+        dataSource: _getCalendarDataSource(listItems),
       ),
-      // 検索ボタン
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // DatePickerを表示する
-          DateTime? picked = await showDatePicker(
-            context: context,
-            locale: const Locale("ja"),
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2010),
-            lastDate: DateTime.now().add(
-              const Duration(days: 1000),
-            ),
-          );
-          try {
-            String formatedDate = DateFormat('yyyy/MM/dd').format(picked!);
-            // TODO カレンダー移動？
-          } catch (_) {}
-        },
-        backgroundColor: Colors.grey[300],
-        child: const Icon(Icons.search),
-      ),
-    );
+    ));
   }
 }
 
-// カレンダー表示データ編集
-List<Meeting> _getDataSource(List<ShiftDataModel> dataList) {
-  final List<Meeting> meetings = <Meeting>[];
-  final _dateFormatter = DateFormat("yyyy/MM/dd");
-
+_AppointmentDataSource _getCalendarDataSource(List<ShiftDataModel> dataList) {
+  List<Appointment> appointments = <Appointment>[];
+  final dateFormatter = DateFormat("yyyy/MM/dd");
+  int roopNum = dataList.length; // 繰り返し回数
   for (ShiftDataModel data in dataList) {
-    // 時刻取得
-    var start = data.startTime.split(':');
-    var end = data.endTime.split(':');
-    int startH = int.parse(start[0]);
-    int startM = int.parse(start[1]);
-    int endH = int.parse(end[0]);
-    int endM = int.parse(end[1]);
-
     // シフト基準日(加算)
-    DateTime baseDate = _dateFormatter
+    DateTime baseDate = dateFormatter
         .parseStrict(data.baseDate)
         .add(Duration(days: data.recordOrderNum));
-
-    // for (int i = 0; i < 30; i++) {
-    DateTime startTime = DateTime(
-        baseDate.year, baseDate.month, baseDate.day, startH, startM, 0);
-    DateTime endTime =
-        DateTime(baseDate.year, baseDate.month, baseDate.day, endH, endM, 0);
-    meetings
-        .add(Meeting(data.shiftName, startTime, endTime, Colors.blue, false));
-    // }
+    if (data.holidayFlag) {
+      // 休日
+      appointments.add(Appointment(
+        startTime: baseDate,
+        endTime: baseDate,
+        subject: '休',
+        color: Colors.red,
+        recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
+      ));
+    } else {
+      // 開始時間
+      appointments.add(Appointment(
+        startTime: baseDate,
+        endTime: baseDate,
+        subject: data.startTime,
+        color: Colors.blue,
+        recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
+      ));
+      // 終了時間
+      appointments.add(Appointment(
+        startTime: baseDate,
+        endTime: baseDate,
+        subject: data.endTime,
+        color: Colors.blue,
+        recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
+      ));
+    }
   }
 
-  return meetings;
+  return _AppointmentDataSource(appointments);
 }
 
-class MeetingDataSource extends CalendarDataSource {
-  MeetingDataSource(List<Meeting> source) {
+class _AppointmentDataSource extends CalendarDataSource {
+  _AppointmentDataSource(List<Appointment> source) {
     appointments = source;
   }
-
-  @override
-  DateTime getStartTime(int index) {
-    return appointments![index].from;
-  }
-
-  @override
-  DateTime getEndTime(int index) {
-    return appointments![index].to;
-  }
-
-  @override
-  String getSubject(int index) {
-    return appointments![index].eventName;
-  }
-
-  @override
-  Color getColor(int index) {
-    return appointments![index].background;
-  }
-
-  @override
-  bool isAllDay(int index) {
-    return appointments![index].isAllDay;
-  }
-}
-
-class Meeting {
-  Meeting(this.eventName, this.from, this.to, this.background, this.isAllDay);
-
-  String eventName;
-  DateTime from;
-  DateTime to;
-  Color background;
-  bool isAllDay;
 }

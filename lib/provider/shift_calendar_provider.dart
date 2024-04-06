@@ -25,11 +25,11 @@ class _ShiftDataUtil {
             T1.id AS id,
             T1.shift_name AS shift_name,
             T1.base_date AS base_date,
-            T1.order_num AS table_order_num,
             T2.shift_table_id AS shift_table_id,
             T2.order_num AS record_order_num,
             T2.start_time AS start_time,
-            T2.end_time AS end_time
+            T2.end_time AS end_time,
+            T2.holiday_flag AS holiday_flag
           FROM shift_table T1 INNER JOIN shift_record T2 ON T1.id = T2.shift_table_id
           WHERE T1.show_flag = 1
           ORDER BY T1.order_num ASC, T2.order_num ASC;
@@ -43,7 +43,8 @@ class _ShiftDataUtil {
           shiftTableId: row['shift_table_id'],
           recordOrderNum: row['record_order_num'],
           startTime: row['start_time'],
-          endTime: row['end_time']);
+          endTime: row['end_time'],
+          holidayFlag: row['holiday_flag'] == 1);
       list.add(model);
     }
     return list;
