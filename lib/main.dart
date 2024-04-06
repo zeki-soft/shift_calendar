@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shift_calendar/pages/shift_edit.dart';
 import 'package:shift_calendar/pages/shift_file.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
@@ -50,34 +53,72 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    CommonSql.create(); // DB初期化
-    return MaterialApp(
-        home: DefaultTabController(
-            length: 3,
-            child: Scaffold(
-                // ヘッダー
-                appBar: PreferredSize(
-                    preferredSize: const Size.fromHeight(50.0),
-                    child: AppBar(
-                      bottom: TabBar(
-                        controller: _tabController,
-                        tabs: myTabs,
-                      ),
-                    )),
-                body: TabBarView(
-                  controller: _tabController,
-                  children: myTabs.map((Tab tab) {
-                    // タブ選択
-                    final String label = tab.text!;
-                    if (label == 'カレンダー') {
-                      // return CalendarApp(); // TODO
-                      return CalendarApp();
-                    } else if (label == 'シフト編集') {
-                      return ShiftEdit();
-                    } else {
-                      return ShiftFile();
-                    }
-                  }).toList(),
-                ))));
+    return FutureBuilder<Directory>(
+        future: getApplicationDocumentsDirectory(),
+        builder: (BuildContext context, AsyncSnapshot<Directory> snapshot) {
+          if (snapshot.hasData) {
+            // DB初期化
+            CommonSql.init(snapshot.data!);
+            return MaterialApp(
+                home: DefaultTabController(
+                    length: 3,
+                    child: Scaffold(
+                        // ヘッダー
+                        appBar: PreferredSize(
+                            preferredSize: const Size.fromHeight(50.0),
+                            child: AppBar(
+                              bottom: TabBar(
+                                controller: _tabController,
+                                tabs: myTabs,
+                              ),
+                            )),
+                        body: TabBarView(
+                          controller: _tabController,
+                          children: myTabs.map((Tab tab) {
+                            // タブ選択
+                            final String label = tab.text!;
+                            if (label == 'カレンダー') {
+                              return CalendarTable();
+                            } else if (label == 'シフト編集') {
+                              return ShiftEdit();
+                            } else {
+                              return ShiftFile();
+                            }
+                          }).toList(),
+                        ))));
+          } else {
+            return CircularProgressIndicator();
+          }
+        });
+
+    // CommonSql.create(); // DB初期化
+
+    // return MaterialApp(
+    //     home: DefaultTabController(
+    //         length: 3,
+    //         child: Scaffold(
+    //             // ヘッダー
+    //             appBar: PreferredSize(
+    //                 preferredSize: const Size.fromHeight(50.0),
+    //                 child: AppBar(
+    //                   bottom: TabBar(
+    //                     controller: _tabController,
+    //                     tabs: myTabs,
+    //                   ),
+    //                 )),
+    //             body: TabBarView(
+    //               controller: _tabController,
+    //               children: myTabs.map((Tab tab) {
+    //                 // タブ選択
+    //                 final String label = tab.text!;
+    //                 if (label == 'カレンダー') {
+    //                   return CalendarTable();
+    //                 } else if (label == 'シフト編集') {
+    //                   return ShiftEdit();
+    //                 } else {
+    //                   return ShiftFile();
+    //                 }
+    //               }).toList(),
+    //             ))));
   }
 }

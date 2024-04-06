@@ -16,7 +16,7 @@ class ShiftTableSql extends CommonSql {
     return id;
   }
 
-  // 順番生成
+  // 順番生成(初期値:0)
   static int generateOrderNum() {
     final ResultSet resultSet = CommonSql.db.select('''
         SELECT IFNULL(MAX(order_num), 0) AS order_num FROM shift_table

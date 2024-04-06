@@ -13,10 +13,10 @@ import 'package:shift_calendar/sql/shift_table_sql.dart';
 class ShiftEdit extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ShiftRecordNotifier shiftRecordController =
-        ref.read(shiftRecordProvider.notifier);
     // シフト表全件取得(監視)
     List<ShiftTableModel> listItems = ref.watch(shiftTableProvider);
+    ShiftRecordNotifier shiftRecordController =
+        ref.read(shiftRecordProvider.notifier);
     return Scaffold(
       body: Column(
         children: [
@@ -76,19 +76,21 @@ class ShiftEdit extends ConsumerWidget {
   // シフト一覧ヘッダー
   Widget _listDataHeader() {
     return Container(
-        color: Colors.grey[300],
+        color: Colors.blue,
         child: const ListTile(
             title: Row(children: [
           Expanded(
               flex: 2,
               child: Text('シフト表示',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold))),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold))),
           Expanded(
               flex: 7,
               child: Text('シフト名',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold))),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold))),
         ])));
   }
 

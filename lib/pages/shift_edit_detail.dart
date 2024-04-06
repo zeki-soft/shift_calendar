@@ -107,8 +107,7 @@ class ShiftEditDetail extends ConsumerWidget {
               orderNum:
                   ShiftRecordSql.generateOrderNum(shiftTableId: shiftData.id),
               startTime: '',
-              endTime: '',
-              remarks: '');
+              endTime: '');
           // シフトレコード(新規作成)のダイアログ表示
           showDialog<void>(
               barrierColor: Colors.grey.withOpacity(0.8),
@@ -131,29 +130,27 @@ class ShiftEditDetail extends ConsumerWidget {
   // シフト一覧ヘッダー
   Widget _listDataHeader() {
     return Container(
-        color: Colors.grey[300],
+        color: Colors.blue,
         child: const ListTile(
             title: Row(children: [
           Expanded(
-              flex: 2,
+              flex: 1,
               child: Text('シフト基準日',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold))),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold))),
           Expanded(
               flex: 1,
-              child: Text('開始\n時間',
+              child: Text('開始時間',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold))),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold))),
           Expanded(
               flex: 1,
-              child: Text('終了\n時間',
+              child: Text('終了時間',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold))),
-          Expanded(
-              flex: 4,
-              child: Text('備考',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontWeight: FontWeight.bold))),
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold))),
         ])));
   }
 
@@ -196,7 +193,7 @@ class ShiftEditDetail extends ConsumerWidget {
                 title: Row(children: [
                   Expanded(
                       // シフト基準日
-                      flex: 2,
+                      flex: 1,
                       child: Text(
                         baseDate,
                         textAlign: TextAlign.center,
@@ -213,13 +210,6 @@ class ShiftEditDetail extends ConsumerWidget {
                       flex: 1,
                       child: Text(
                         item.endTime,
-                        textAlign: TextAlign.center,
-                      )),
-                  Expanded(
-                      // 備考
-                      flex: 4,
-                      child: Text(
-                        item.remarks,
                         textAlign: TextAlign.center,
                       )),
                 ]))));

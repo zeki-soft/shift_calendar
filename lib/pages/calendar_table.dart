@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:shift_calendar/model/shift_data_model.dart';
+import 'package:shift_calendar/provider/shift_calendar_provider.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-class CalendarApp extends StatelessWidget {
+class CalendarTable extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // シフト表全件取得(監視)
+    List<ShiftDataModel> listItems = ref.watch(shiftCalendarProvider);
     return Container(
       child: SfCalendar(
           view: CalendarView.schedule,
           headerDateFormat: 'yyyy年MM月',
-          dataSource: MeetingDataSource(_getDataSource()),
+          dataSource: MeetingDataSource(_getDataSource(listItems)),
           scheduleViewSettings: const ScheduleViewSettings(
               // 月ヘッダー
               monthHeaderSettings: MonthHeaderSettings(
@@ -41,33 +47,34 @@ class CalendarApp extends StatelessWidget {
   }
 }
 
-List<Meeting> _getDataSource() {
+// カレンダー表示データ編集
+List<Meeting> _getDataSource(List<ShiftDataModel> dataList) {
   final List<Meeting> meetings = <Meeting>[];
-  final DateTime today = DateTime.now();
-  final DateTime startTime =
-      DateTime(today.year, today.month, today.day, 9, 0, 0);
-  final DateTime endTime = startTime.add(const Duration(hours: 2));
-  meetings
-      .add(Meeting('シフトA', startTime, endTime, const Color(0xFF0F8644), false));
+  final _dateFormatter = DateFormat("yyyy/MM/dd");
 
-  for (int i = 0; i < 28; i++) {
-    final DateTime today1 = DateTime(2024, 04, 01);
-    final DateTime startTime1 =
-        DateTime(today1.year, today1.month, today1.day + i, 9, 0, 0);
-    final DateTime endTime1 = startTime1.add(const Duration(hours: 3));
-    meetings.add(Meeting('シフトB', startTime1, endTime1, Colors.blue, false));
+  for (ShiftDataModel data in dataList) {
+    // 時刻取得
+    var start = data.startTime.split(':');
+    var end = data.endTime.split(':');
+    int startH = int.parse(start[0]);
+    int startM = int.parse(start[1]);
+    int endH = int.parse(end[0]);
+    int endM = int.parse(end[1]);
+
+    // シフト基準日(加算)
+    DateTime baseDate = _dateFormatter
+        .parseStrict(data.baseDate)
+        .add(Duration(days: data.recordOrderNum));
+
+    // for (int i = 0; i < 30; i++) {
+    DateTime startTime = DateTime(
+        baseDate.year, baseDate.month, baseDate.day, startH, startM, 0);
+    DateTime endTime =
+        DateTime(baseDate.year, baseDate.month, baseDate.day, endH, endM, 0);
+    meetings
+        .add(Meeting(data.shiftName, startTime, endTime, Colors.blue, false));
+    // }
   }
-  // final DateTime today2 = DateTime(2024, 01, 24);
-  // final DateTime startTime2 =
-  //     DateTime(today2.year, today2.month, today2.day, 9, 0, 0);
-  // final DateTime endTime2 = startTime2.add(const Duration(hours: 3));
-  // meetings.add(Meeting('シフトC', startTime2, endTime2, Colors.red, false));
-
-  // final DateTime today3 = DateTime(2024, 01, 26);
-  // final DateTime startTime3 =
-  //     DateTime(today3.year, today3.month, today3.day, 9, 0, 0);
-  // final DateTime endTime3 = startTime3.add(const Duration(hours: 3));
-  // meetings.add(Meeting('シフトD', startTime3, endTime3, Colors.yellow, false));
 
   return meetings;
 }

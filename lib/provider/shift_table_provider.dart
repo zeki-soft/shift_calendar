@@ -9,7 +9,7 @@ final shiftTableProvider =
 });
 
 class ShiftTableNotifier extends StateNotifier<List<ShiftTableModel>> {
-  ShiftTableNotifier() : super([]);
+  ShiftTableNotifier() : super(ShiftTableSql.getShiftTableAll());
 
   void update() {
     state = ShiftTableSql.getShiftTableAll();

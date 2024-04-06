@@ -107,24 +107,21 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                           List<ShiftRecordModel> recordList = [
                             ShiftRecordModel(
                               shiftTableId: shiftData.id,
-                              orderNum: 1,
-                              startTime: '09:30',
+                              orderNum: 0,
+                              startTime: '09:00',
                               endTime: '18:00',
-                              remarks: '',
+                            ),
+                            ShiftRecordModel(
+                              shiftTableId: shiftData.id,
+                              orderNum: 1,
+                              startTime: '10:00',
+                              endTime: '19:00',
                             ),
                             ShiftRecordModel(
                               shiftTableId: shiftData.id,
                               orderNum: 2,
-                              startTime: '10:00',
-                              endTime: '19:00',
-                              remarks: '',
-                            ),
-                            ShiftRecordModel(
-                              shiftTableId: shiftData.id,
-                              orderNum: 3,
                               startTime: '11:00',
                               endTime: '20:00',
-                              remarks: '',
                             ),
                           ];
                           ShiftRecordSql.insert(recordList: recordList);

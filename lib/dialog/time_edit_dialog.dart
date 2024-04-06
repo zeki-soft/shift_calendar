@@ -34,8 +34,6 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
       TextEditingController(); // 開始時間コントローラー
   TextEditingController _endTimeController =
       TextEditingController(); // 終了時間コントローラー
-  TextEditingController _remarksController =
-      TextEditingController(); // 備考コントローラー
 
   _TimeEditDialogState(
       {required this.shiftData,
@@ -69,35 +67,22 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
               ),
               onChanged: (text) {
                 // 編集完了後
-                print("Current text: $text");
+                // print("Current text: $text");
               },
             ),
             const SizedBox(height: 20),
             // 終了時間
             TimeTextField(_startTimeController),
-            // TextField(
-            //   controller: _endTimeController,
-            //   decoration: const InputDecoration(
-            //     labelText: '終了時間',
-            //     hintText: '',
-            //     border: OutlineInputBorder(),
-            //   ),
-            //   onChanged: (text) {
-            //     // 編集完了後
-            //     print("Current text: $text");
-            //   },
-            // ),
-            const SizedBox(height: 20),
-            // 備考
             TextField(
-              controller: _remarksController,
+              controller: _endTimeController,
               decoration: const InputDecoration(
-                labelText: '備考',
+                labelText: '終了時間',
                 hintText: '',
                 border: OutlineInputBorder(),
               ),
               onChanged: (text) {
-                // 編集完了後
+                // 編集完了後 TODO
+                // print("Current text: $text");
               },
             ),
             const SizedBox(height: 20),
@@ -110,8 +95,7 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
                       shiftTableId: recordData.shiftTableId,
                       orderNum: recordData.orderNum,
                       startTime: _startTimeController.text,
-                      endTime: _endTimeController.text,
-                      remarks: _remarksController.text);
+                      endTime: _endTimeController.text);
                   if (updateFlag) {
                     ShiftRecordSql.update(recordList: [model]);
                   } else {

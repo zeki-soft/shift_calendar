@@ -3,7 +3,7 @@ import 'package:shift_calendar/sql/common_sql.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class ShiftRecordSql extends CommonSql {
-  // 順番号生成
+  // 順番号生成(初期値:0)
   static int generateOrderNum({required int shiftTableId}) {
     final ResultSet resultSet = CommonSql.db.select('''
         SELECT IFNULL(MAX(order_num), 0) AS order_num FROM shift_record WHERE shift_table_id = ?
@@ -20,10 +20,10 @@ class ShiftRecordSql extends CommonSql {
   static void insert({required List<ShiftRecordModel> recordList}) {
     try {
       final stmt = CommonSql.db.prepare('''
-          INSERT INTO shift_record (shift_table_id, order_num, start_time, end_time, remarks)
-          VALUES (?, ?, ?, ?, ?)
+          INSERT INTO shift_record (shift_table_id, order_num, start_time, end_time)
+          VALUES (?, ?, ?, ?)
           ON CONFLICT (shift_table_id, order_num) 
-          DO UPDATE SET start_time = shift_record.start_time, end_time = shift_record.end_time, remarks = shift_record.remarks
+          DO UPDATE SET start_time = shift_record.start_time, end_time = shift_record.end_time
         ''');
       recordList.forEach((data) {
         stmt.execute([
@@ -31,7 +31,6 @@ class ShiftRecordSql extends CommonSql {
           data.orderNum,
           data.startTime,
           data.endTime,
-          data.remarks,
         ]);
       });
       stmt.dispose();
@@ -44,7 +43,7 @@ class ShiftRecordSql extends CommonSql {
   static void update({required List<ShiftRecordModel> recordList}) {
     final stmt = CommonSql.db.prepare('''
           UPDATE shift_record SET 
-          order_num = ?, start_time = ?, end_time = ?, remarks = ?
+          order_num = ?, start_time = ?, end_time = ?
           WHERE shift_table_id = ?
         ''');
     recordList.forEach((data) {
@@ -52,7 +51,6 @@ class ShiftRecordSql extends CommonSql {
         data.orderNum,
         data.startTime,
         data.endTime,
-        data.remarks,
         data.shiftTableId,
       ]);
     });
@@ -75,7 +73,7 @@ class ShiftRecordSql extends CommonSql {
     ShiftRecordModel? model;
     try {
       final ResultSet resultSet = CommonSql.db.select('''
-        SELECT shift_table_id, order_num, start_time, end_time, remarks
+        SELECT shift_table_id, order_num, start_time, end_time
         FROM shift_record WHERE shift_table_id = ? AND order_num = ?
         ''', [shiftTableId, orderNum]);
       if (resultSet.isNotEmpty) {
@@ -84,8 +82,7 @@ class ShiftRecordSql extends CommonSql {
             shiftTableId: row['shift_table_id'],
             orderNum: row['order_num'],
             startTime: row['start_time'],
-            endTime: row['end_time'],
-            remarks: row['remarks']);
+            endTime: row['end_time']);
       }
     } catch (e) {
       print(e);
@@ -97,7 +94,7 @@ class ShiftRecordSql extends CommonSql {
   static List<ShiftRecordModel> getShiftRecordAll({required int shiftTableId}) {
     try {
       final ResultSet resultSet = CommonSql.db.select('''
-        SELECT shift_table_id, order_num, start_time, end_time, remarks
+        SELECT shift_table_id, order_num, start_time, end_time
         FROM shift_record WHERE shift_table_id = ?;
         ''', [shiftTableId]);
       List<ShiftRecordModel> list = [];
@@ -106,8 +103,7 @@ class ShiftRecordSql extends CommonSql {
             shiftTableId: row['shift_table_id'],
             orderNum: row['order_num'],
             startTime: row['start_time'],
-            endTime: row['end_time'],
-            remarks: row['remarks']);
+            endTime: row['end_time']);
         list.add(model);
       }
       return list;

@@ -10,7 +10,7 @@ final shiftCalendarProvider =
 });
 
 class ShiftCalendarNotifier extends StateNotifier<List<ShiftDataModel>> {
-  ShiftCalendarNotifier() : super([]);
+  ShiftCalendarNotifier() : super(_ShiftDataUtil().getShiftCalendar());
 
   void update() {
     state = _ShiftDataUtil().getShiftCalendar();
@@ -29,9 +29,8 @@ class _ShiftDataUtil {
             T2.shift_table_id AS shift_table_id,
             T2.order_num AS record_order_num,
             T2.start_time AS start_time,
-            T2.end_time AS end_time,
-            T2.remarks AS remarks
-          FROM shift_table T1 LEFT JOIN shift_record T2 ON T1.id = T2.shift_table_id
+            T2.end_time AS end_time
+          FROM shift_table T1 INNER JOIN shift_record T2 ON T1.id = T2.shift_table_id
           WHERE T1.show_flag = 1
           ORDER BY T1.order_num ASC, T2.order_num ASC;
         ''');
@@ -41,12 +40,10 @@ class _ShiftDataUtil {
           id: row["id"],
           shiftName: row["shift_name"],
           baseDate: row["base_date"],
-          tableOrderNum: row["table_order_num"],
           shiftTableId: row['shift_table_id'],
-          recordOrderNum: row['order_num'],
+          recordOrderNum: row['record_order_num'],
           startTime: row['start_time'],
-          endTime: row['end_time'],
-          remarks: row['remarks']);
+          endTime: row['end_time']);
       list.add(model);
     }
     return list;
