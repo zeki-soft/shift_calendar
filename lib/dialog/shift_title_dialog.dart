@@ -94,7 +94,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                       ShiftTableSql.update(model: shiftData);
                     } else {
                       // 新規追加
-                      ShiftTableSql.insert(model: shiftData);
+                      ShiftTableSql.insert(tableList: [shiftData]);
                       // シフトレコードサンプル登録
                       List<ShiftRecordModel> recordList = [
                         ShiftRecordModel(

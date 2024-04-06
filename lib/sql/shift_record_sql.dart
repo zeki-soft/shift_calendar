@@ -94,12 +94,19 @@ class ShiftRecordSql extends CommonSql {
   }
 
   // 全件取得
-  static List<ShiftRecordModel> getShiftRecordAll({required int shiftTableId}) {
+  static List<ShiftRecordModel> getShiftRecordAll({int? shiftTableId}) {
     try {
-      final ResultSet resultSet = CommonSql.db.select('''
+      ResultSet resultSet;
+      if (shiftTableId != null) {
+        resultSet = CommonSql.db.select('''
         SELECT shift_table_id, order_num, start_time, end_time, holiday_flag
         FROM shift_record WHERE shift_table_id = ?;
         ''', [shiftTableId]);
+      } else {
+        resultSet = CommonSql.db.select('''
+        SELECT shift_table_id, order_num, start_time, end_time, holiday_flag FROM shift_record;
+        ''', []);
+      }
       List<ShiftRecordModel> list = [];
       for (Row row in resultSet) {
         ShiftRecordModel model = ShiftRecordModel(
@@ -115,5 +122,12 @@ class ShiftRecordSql extends CommonSql {
       print(e);
       return [];
     }
+  }
+
+  // テーブル削除
+  static truncate() {
+    var stmt = CommonSql.db.prepare('DELETE FROM shift_record');
+    stmt.execute();
+    stmt.dispose();
   }
 }

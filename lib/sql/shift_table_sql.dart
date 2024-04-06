@@ -31,20 +31,22 @@ class ShiftTableSql extends CommonSql {
   }
 
   // 新規作成(追加)
-  static void insert({required ShiftTableModel model}) {
+  static void insert({required List<ShiftTableModel> tableList}) {
     try {
       final stmt = CommonSql.db.prepare('''
           INSERT INTO shift_table (id, shift_name, show_flag, base_date, order_num) VALUES (?, ?, ?, ?, ?)
           ON CONFLICT (id) 
           DO UPDATE SET shift_name = shift_table.shift_name, show_flag = shift_table.show_flag, base_date = shift_table.base_date, order_num = shift_table.order_num;
         ''');
-      stmt.execute([
-        model.id,
-        model.shiftName,
-        model.showFlag,
-        model.baseDate,
-        model.orderNum,
-      ]);
+      tableList.forEach((model) {
+        stmt.execute([
+          model.id,
+          model.shiftName,
+          model.showFlag,
+          model.baseDate,
+          model.orderNum,
+        ]);
+      });
       stmt.dispose();
     } catch (e) {
       print(e);
@@ -145,5 +147,12 @@ class ShiftTableSql extends CommonSql {
       print(e);
       return [];
     }
+  }
+
+  // テーブル削除
+  static truncate() {
+    var stmt = CommonSql.db.prepare('DELETE FROM shift_table');
+    stmt.execute();
+    stmt.dispose();
   }
 }

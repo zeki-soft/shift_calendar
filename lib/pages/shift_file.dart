@@ -1,6 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:shift_calendar/model/json_file_model.dart';
+import 'package:shift_calendar/model/json_file_model.dart';
+import 'package:shift_calendar/model/shift_record_model.dart';
+import 'package:shift_calendar/sql/shift_record_sql.dart';
+import 'package:shift_calendar/sql/shift_table_sql.dart';
 
 class ShiftFile extends StatefulWidget {
   @override
@@ -83,13 +92,45 @@ class _ShiftFileState extends State<ShiftFile> {
                   style: TextStyle(
                     fontSize: 16,
                   )),
-              onPressed: () {
+              onPressed: () async {
                 // ファイル選択
-                final pickedFile = FilePicker.platform.pickFiles(
+                FilePickerResult? filePickerResult =
+                    await FilePicker.platform.pickFiles(
                   type: FileType.custom,
                   allowedExtensions: ['json'],
                 );
-                pickedFile.then((value) => null);
+                if (filePickerResult != null) {
+                  try {
+                    // ファイル読み込み
+                    File file = File(filePickerResult.files.single.path!);
+                    String json = await file.readAsString();
+                    // Json形式で読み込み
+                    var map = jsonDecode(json);
+                    JsonFIleModel jsonModel = JsonFIleModel.fromJson(map);
+                    // テーブル削除
+                    ShiftTableSql.truncate();
+                    ShiftRecordSql.truncate();
+                    // インポート
+                    ShiftTableSql.insert(tableList: jsonModel.tableList);
+                    ShiftRecordSql.insert(recordList: jsonModel.recordList);
+                    // メッセージ表示
+                    Fluttertoast.showToast(
+                        msg: 'シフト表をインポートしました。',
+                        toastLength: Toast.LENGTH_LONG,
+                        backgroundColor: Colors.black,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                  } catch (e) {
+                    print(e);
+                    // エラーメッセージ表示
+                    Fluttertoast.showToast(
+                        msg: 'インポートに失敗しました。\nファイルが正しいか確認してください。',
+                        toastLength: Toast.LENGTH_LONG,
+                        backgroundColor: Colors.black,
+                        textColor: Colors.white,
+                        fontSize: 16.0);
+                  }
+                }
                 Navigator.pop(context);
               },
             ),
@@ -113,13 +154,28 @@ class _ShiftFileState extends State<ShiftFile> {
     DateFormat outputFormat = DateFormat('yyyyMMddhhmmss');
     String date = outputFormat.format(now);
 
+    // 出力ファイル生成
+    JsonFIleModel file = JsonFIleModel(
+        tableList: ShiftTableSql.getShiftTableAll(),
+        recordList: ShiftRecordSql.getShiftRecordAll());
+    String json = jsonEncode(file.toJson());
+
     String? outputFile = await FilePicker.platform.saveFile(
       dialogTitle: '現在のシフト表をファイル出力します:',
-      fileName: 'シフト表_$date.json',
+      fileName: '交代制シフト表_$date.json',
+      bytes: utf8.encode(json), // 出力内容(UTF-8)
     );
 
     if (outputFile == null) {
-      // User canceled the picker
+      // ファイル出力キャンセル
+    } else {
+      // ファイル出力した場合
+      Fluttertoast.showToast(
+          msg: 'ファイル出力しました。',
+          toastLength: Toast.LENGTH_LONG,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0);
     }
   }
 }
