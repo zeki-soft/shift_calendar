@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/provider/shift_record_provider.dart';
@@ -43,15 +44,26 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
       required this.updateFlag});
 
   @override
+  void initState() {
+    super.initState();
+    _startTimeController.text = recordData.startTime;
+    _endTimeController.text = recordData.endTime;
+  }
+
+  @override
   Widget build(BuildContext context) {
     ShiftRecordNotifier shiftRecordController =
         ref.read(shiftRecordProvider.notifier);
-    String baseData = shiftData.baseDate;
+    // シフト基準日
+    DateTime baseDate = DateFormat("yyyy/MM/dd")
+        .parseStrict(shiftData.baseDate)
+        .add(Duration(days: shiftData.orderNum));
+
     return AlertDialog(
       insetPadding: const EdgeInsets.all(0),
       backgroundColor: Colors.white,
       title: Text(
-        'シフト基準日: $baseData',
+        'シフト基準日: $baseDate',
         style: const TextStyle(color: Colors.black, fontSize: 20),
       ),
       content: Container(
@@ -68,36 +80,21 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
               // 決定ボタン
               TextButton(
                 onPressed: () {
-                  // 入力チェック
-                  final regTime =
-                      RegExp(r'^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$');
-                  bool checkFlag =
-                      regTime.hasMatch(_startTimeController.text) &&
-                          regTime.hasMatch(_endTimeController.text);
-                  if (checkFlag) {
-                    // シフトレコードDB登録/更新
-                    ShiftRecordModel model = ShiftRecordModel(
-                        shiftTableId: recordData.shiftTableId,
-                        orderNum: recordData.orderNum,
-                        startTime: _startTimeController.text,
-                        endTime: _endTimeController.text);
-                    if (updateFlag) {
-                      ShiftRecordSql.update(recordList: [model]);
-                    } else {
-                      ShiftRecordSql.insert(recordList: [model]);
-                    }
-                    // シフト編集を更新
-                    shiftRecordController.update(shiftData.id);
-                    // ダイアログを閉じる
-                    Navigator.pop(context);
+                  // シフトレコードDB登録/更新
+                  ShiftRecordModel model = ShiftRecordModel(
+                      shiftTableId: recordData.shiftTableId,
+                      orderNum: recordData.orderNum,
+                      startTime: _startTimeController.text,
+                      endTime: _endTimeController.text);
+                  if (updateFlag) {
+                    ShiftRecordSql.update(recordList: [model]);
                   } else {
-                    // 入力チェックエラー
-                    Fluttertoast.showToast(
-                        msg: '開始時間または終了時間の形式が不正です。',
-                        backgroundColor: Colors.black,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
+                    ShiftRecordSql.insert(recordList: [model]);
                   }
+                  // シフト編集を更新
+                  shiftRecordController.update(shiftData.id);
+                  // ダイアログを閉じる
+                  Navigator.pop(context);
                 },
                 child: const Text('決定',
                     style: TextStyle(

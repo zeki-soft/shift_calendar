@@ -86,7 +86,7 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                           }
                         }).toList(),
                       ))),
-              localizationsDelegates: [
+              localizationsDelegates: const [
                 GlobalMaterialLocalizations.delegate,
                 GlobalWidgetsLocalizations.delegate,
                 GlobalCupertinoLocalizations.delegate,
@@ -99,35 +99,5 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
             return CircularProgressIndicator();
           }
         });
-
-    // CommonSql.create(); // DB初期化
-
-    // return MaterialApp(
-    //     home: DefaultTabController(
-    //         length: 3,
-    //         child: Scaffold(
-    //             // ヘッダー
-    //             appBar: PreferredSize(
-    //                 preferredSize: const Size.fromHeight(50.0),
-    //                 child: AppBar(
-    //                   bottom: TabBar(
-    //                     controller: _tabController,
-    //                     tabs: myTabs,
-    //                   ),
-    //                 )),
-    //             body: TabBarView(
-    //               controller: _tabController,
-    //               children: myTabs.map((Tab tab) {
-    //                 // タブ選択
-    //                 final String label = tab.text!;
-    //                 if (label == 'カレンダー') {
-    //                   return CalendarTable();
-    //                 } else if (label == 'シフト編集') {
-    //                   return ShiftEdit();
-    //                 } else {
-    //                   return ShiftFile();
-    //                 }
-    //               }).toList(),
-    //             ))));
   }
 }

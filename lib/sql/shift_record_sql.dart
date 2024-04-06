@@ -42,17 +42,12 @@ class ShiftRecordSql extends CommonSql {
   // 更新
   static void update({required List<ShiftRecordModel> recordList}) {
     final stmt = CommonSql.db.prepare('''
-          UPDATE shift_record SET 
-          order_num = ?, start_time = ?, end_time = ?
-          WHERE shift_table_id = ?
+          UPDATE shift_record SET start_time = ?, end_time = ?
+          WHERE shift_table_id = ? AND order_num = ?
         ''');
     recordList.forEach((data) {
-      stmt.execute([
-        data.orderNum,
-        data.startTime,
-        data.endTime,
-        data.shiftTableId,
-      ]);
+      stmt.execute(
+          [data.startTime, data.endTime, data.shiftTableId, data.orderNum]);
     });
     stmt.dispose();
   }

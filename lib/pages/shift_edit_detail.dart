@@ -6,6 +6,7 @@ import 'package:shift_calendar/dialog/shift_title_dialog.dart';
 import 'package:shift_calendar/dialog/time_edit_dialog.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
+import 'package:shift_calendar/provider/shift_calendar_provider.dart';
 import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
@@ -18,6 +19,8 @@ class ShiftEditDetail extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ShiftCalendarNotifier shiftCalendarController =
+        ref.read(shiftCalendarProvider.notifier);
     ShiftTableNotifier shiftTableController =
         ref.read(shiftTableProvider.notifier);
     ShiftRecordNotifier shiftRecordController =
@@ -27,7 +30,7 @@ class ShiftEditDetail extends ConsumerWidget {
     if (newFlag) {
       // 新規作成の場合
       Fluttertoast.showToast(
-          msg: 'サンプルのシフトデータを作成しました。',
+          msg: '【${shiftData.shiftName}】\nサンプルのシフト時間を作成しました。',
           backgroundColor: Colors.black,
           textColor: Colors.white,
           fontSize: 16.0);
@@ -38,6 +41,7 @@ class ShiftEditDetail extends ConsumerWidget {
         leading: IconButton(
           onPressed: () {
             // 前画面を更新
+            shiftCalendarController.update();
             shiftTableController.update();
             // 画面を閉じる
             Navigator.pop(context);
@@ -78,17 +82,28 @@ class ShiftEditDetail extends ConsumerWidget {
               // 入れ替え可能リスト
               child: ReorderableListView.builder(
                   itemBuilder: (context, index) {
-                    return _listData(listItems[index], index, context, ref,
+                    return _listData(
+                        shiftData,
+                        listItems[index],
+                        index,
+                        context,
+                        ref,
+                        shiftCalendarController,
                         shiftRecordController);
                   },
                   itemCount: listItems.length,
                   onReorder: (int oldIndex, int newIndex) {
-                    // 入れ替え処理(固定処理) TODO 禁止
-                    // if (oldIndex < newIndex) {
-                    //   newIndex -= 1;
-                    // }
-                    // var item = items.removeAt(oldIndex);
-                    // items.insert(newIndex, item);
+                    // 入れ替え処理(old⇒newのindexに移動)
+                    if (oldIndex < newIndex) {
+                      newIndex -= 1;
+                    }
+                    listItems[oldIndex].orderNum = newIndex;
+                    listItems[newIndex].orderNum = oldIndex;
+                    // DB更新処理
+                    ShiftRecordSql.update(recordList: listItems);
+                    // 画面更新処理
+                    shiftCalendarController.update();
+                    shiftRecordController.update(shiftData.id);
                   },
                   proxyDecorator: (widget, _, __) {
                     return Opacity(opacity: 0.5, child: widget);
@@ -152,8 +167,14 @@ class ShiftEditDetail extends ConsumerWidget {
   }
 
   // シフトデータ
-  Widget _listData(ShiftRecordModel item, int index, BuildContext context,
-      WidgetRef ref, ShiftRecordNotifier shiftRecordController) {
+  Widget _listData(
+      ShiftTableModel shiftData,
+      ShiftRecordModel item,
+      int index,
+      BuildContext context,
+      WidgetRef ref,
+      ShiftCalendarNotifier shiftCalendarController,
+      ShiftRecordNotifier shiftRecordController) {
     // シフト基準日を計算
     DateFormat dateFormat = DateFormat('yyyy/MM/dd');
     DateTime date = dateFormat.parseStrict(shiftData.baseDate);
@@ -166,7 +187,37 @@ class ShiftEditDetail extends ConsumerWidget {
               // リスト削除処理
               ShiftRecordSql.delete(
                   shiftTableId: item.shiftTableId, orderNum: item.orderNum);
+              shiftCalendarController.update();
               shiftRecordController.update(item.shiftTableId);
+              // メッセージ
+              Fluttertoast.showToast(
+                  msg: '【${item.startTime}～${item.endTime}】\nシフト時間を削除しました。',
+                  backgroundColor: Colors.black,
+                  textColor: Colors.white,
+                  fontSize: 16.0);
+            },
+            confirmDismiss: (direction) async {
+              // アイテムを削除する前に確認ダイアログを表示する
+              return await showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title:
+                        Text('${item.startTime}～${item.endTime}'), // ダイアログのタイトル
+                    content: const Text('シフト時間を削除しますか？'), // ダイアログのメッセージ
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('キャンセル'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        child: const Text('削除'),
+                      ),
+                    ],
+                  );
+                },
+              );
             },
             background: Container(
               color: Colors.grey[500],
