@@ -15,29 +15,35 @@ class CommonSql {
     // シフト表CREATE
     db.execute('''
           CREATE TABLE IF NOT EXISTS shift_table (
-            id INTEGER NOT NULL PRIMARY KEY,
+            id INTEGER NOT NULL,
             shift_name TEXT,
             show_flag BOOLEAN,
             base_date TEXT,
-            order_num INTEGER
+            order_num INTEGER,
+            PRIMARY KEY (id)
           );
         ''');
     // シフトレコードCREATE
     db.execute('''
           CREATE TABLE IF NOT EXISTS shift_record (
+            id INTEGER NOT NULL,
             shift_table_id INTEGER NOT NULL,
             order_num INTEGER NOT NULL,
             start_time TEXT,
             end_time TEXT,
             holiday_flag BOOLEAN,
-            PRIMARY KEY (shift_table_id, order_num)
+            PRIMARY KEY (id)
           );
         ''');
   }
 
   // テーブル削除
   static drop() {
-    db.execute('DROP TABLE shift_table;');
-    db.execute('DROP TABLE shift_record;');
+    try {
+      db.execute('DROP TABLE shift_table;');
+      db.execute('DROP TABLE shift_record;');
+    } catch (e) {
+      print(e);
+    }
   }
 }

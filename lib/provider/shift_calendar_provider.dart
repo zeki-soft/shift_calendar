@@ -22,10 +22,10 @@ class _ShiftDataUtil {
   List<ShiftDataModel> getShiftCalendar() {
     final ResultSet resultSet = CommonSql.db.select('''
           SELECT 
-            T1.id AS id,
+            T1.id AS shift_table_id,
             T1.shift_name AS shift_name,
             T1.base_date AS base_date,
-            T2.shift_table_id AS shift_table_id,
+            T2.id AS record_id,
             T2.order_num AS record_order_num,
             T2.start_time AS start_time,
             T2.end_time AS end_time,
@@ -37,10 +37,10 @@ class _ShiftDataUtil {
     List<ShiftDataModel> list = [];
     for (Row row in resultSet) {
       ShiftDataModel model = ShiftDataModel(
-          id: row["id"],
+          shiftTableId: row["shift_table_id"],
           shiftName: row["shift_name"],
           baseDate: row["base_date"],
-          shiftTableId: row['shift_table_id'],
+          recordId: row['record_id'],
           recordOrderNum: row['record_order_num'],
           startTime: row['start_time'],
           endTime: row['end_time'],

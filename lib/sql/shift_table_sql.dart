@@ -4,7 +4,7 @@ import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 class ShiftTableSql extends CommonSql {
-  // ID生成
+  // ID生成(初期値:0)
   static int generateId() {
     final ResultSet resultSet = CommonSql.db.select('''
         SELECT IFNULL(MAX(id), 0) AS id FROM shift_table

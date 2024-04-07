@@ -6,7 +6,6 @@ import 'package:shift_calendar/dialog/shift_title_dialog.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/pages/shift_edit_detail.dart';
 import 'package:shift_calendar/provider/shift_calendar_provider.dart';
-import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
 
@@ -22,8 +21,6 @@ class ShiftEdit extends ConsumerWidget {
         ref.read(shiftCalendarProvider.notifier);
     ShiftTableNotifier shiftTableController =
         ref.read(shiftTableProvider.notifier);
-    ShiftRecordNotifier shiftRecordController =
-        ref.read(shiftRecordProvider.notifier);
 
     // ラジオボタン初期選択値
     _selectValue = -1;
@@ -44,14 +41,8 @@ class ShiftEdit extends ConsumerWidget {
               // 入れ替え可能リスト
               child: ReorderableListView.builder(
             itemBuilder: (context, index) {
-              return _listData(
-                  listItems,
-                  index,
-                  context,
-                  ref,
-                  shiftCalendarController,
-                  shiftTableController,
-                  shiftRecordController);
+              return _listData(listItems, index, context, ref,
+                  shiftCalendarController, shiftTableController);
             },
             itemCount: listItems.length,
             onReorder: (int oldIndex, int newIndex) {
@@ -130,11 +121,10 @@ class ShiftEdit extends ConsumerWidget {
       BuildContext context,
       WidgetRef ref,
       ShiftCalendarNotifier shiftCalendarController,
-      ShiftTableNotifier shiftTableController,
-      ShiftRecordNotifier shiftRecordController) {
+      ShiftTableNotifier shiftTableController) {
     ShiftTableModel shiftData = itemList[index];
     return Card(
-        key: Key(shiftData.id.toString()), // キーで紐づけ
+        key: Key(shiftData.id.toString()), // キー指定
         child: Dismissible(
             key: Key(shiftData.id.toString()),
             onDismissed: (DismissDirection direction) {
@@ -143,13 +133,13 @@ class ShiftEdit extends ConsumerWidget {
               // 順番を更新
               List<ShiftTableModel> items = ShiftTableSql.getShiftTableAll();
               // 順番を更新
-              for (int i = 0; i < items.length; i++) {
+              for (int i = index; i < items.length; i++) {
                 items[i].orderNum = i;
               }
               ShiftTableSql.updateList(list: items);
               // 画面を更新
               shiftCalendarController.update();
-              shiftRecordController.update(shiftData.id);
+              shiftTableController.update();
               // メッセージ
               Fluttertoast.showToast(
                   msg: '【${shiftData.shiftName}】\nシフトを削除しました。',
@@ -163,16 +153,19 @@ class ShiftEdit extends ConsumerWidget {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title: Text(shiftData.shiftName), // ダイアログのタイトル
+                    title: Text(
+                      shiftData.shiftName,
+                      style: const TextStyle(color: Colors.black, fontSize: 20),
+                    ), // ダイアログのタイトル
                     content: const Text('シフトを削除しますか？'), // ダイアログのメッセージ
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('キャンセル'),
-                      ),
-                      TextButton(
                         onPressed: () => Navigator.of(context).pop(true),
                         child: const Text('削除'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('キャンセル'),
                       ),
                     ],
                   );
@@ -186,7 +179,7 @@ class ShiftEdit extends ConsumerWidget {
                 onTap: () {
                   // シフト編集を更新
                   shiftCalendarController.update();
-                  shiftRecordController.update(shiftData.id);
+                  shiftTableController.update();
                   // シフト編集詳細へ遷移
                   Navigator.push(
                     context,

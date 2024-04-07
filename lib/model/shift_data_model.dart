@@ -1,20 +1,20 @@
 import 'dart:convert';
 
 class ShiftDataModel {
-  int id;
+  int shiftTableId;
   String shiftName;
   String baseDate;
-  int shiftTableId;
+  int recordId;
   int recordOrderNum;
   String startTime;
   String endTime;
   bool holidayFlag;
 
   ShiftDataModel({
-    required this.id,
+    required this.shiftTableId,
     required this.shiftName,
     required this.baseDate,
-    required this.shiftTableId,
+    required this.recordId,
     required this.recordOrderNum,
     required this.startTime,
     required this.endTime,
@@ -22,10 +22,10 @@ class ShiftDataModel {
   });
 
   factory ShiftDataModel.fromJson(Map<String, dynamic> json) => ShiftDataModel(
-        id: json["id"],
+        shiftTableId: json["shiftTableId"],
         shiftName: json["shiftName"],
         baseDate: json["baseDate"],
-        shiftTableId: json["shiftTableId"],
+        recordId: json["recordId"],
         recordOrderNum: json["recordOrderNum"],
         startTime: json["startTime"],
         endTime: json["endTime"],
@@ -33,10 +33,10 @@ class ShiftDataModel {
       );
 
   Map<String, dynamic> toJson() => {
-        "id": id,
+        "shiftTableId": shiftTableId,
         "shiftName": shiftName,
         "baseDate": baseDate,
-        "shiftTableId": shiftTableId,
+        "recordId": recordId,
         "recordOrderNum": recordOrderNum,
         "startTime": startTime,
         "endTime": endTime,

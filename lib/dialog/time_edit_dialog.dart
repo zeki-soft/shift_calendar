@@ -4,6 +4,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
+import 'package:shift_calendar/provider/shift_calendar_provider.dart';
 import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
@@ -54,10 +55,11 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    ShiftCalendarNotifier shiftCalendarController =
+        ref.read(shiftCalendarProvider.notifier);
     ShiftTableNotifier shiftTableController =
         ref.read(shiftTableProvider.notifier);
-    ShiftRecordNotifier shiftRecordController =
-        ref.read(shiftRecordProvider.notifier);
+
     // シフト基準日
     DateFormat dateFormat = DateFormat('yyyy/MM/dd');
     DateTime baseDate = dateFormat
@@ -94,6 +96,7 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
                   if (checkFlag) {
                     // シフトレコードDB登録/更新
                     ShiftRecordModel model = ShiftRecordModel(
+                        id: recordData.id,
                         shiftTableId: recordData.shiftTableId,
                         orderNum: recordData.orderNum,
                         startTime: _startTimeController.text,
@@ -105,8 +108,8 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
                       ShiftRecordSql.insert(recordList: [model]);
                     }
                     // シフト編集を更新
+                    shiftCalendarController.update();
                     shiftTableController.update();
-                    shiftRecordController.update(shiftData.id);
                     // ダイアログを閉じる
                     Navigator.pop(context);
                   } else {

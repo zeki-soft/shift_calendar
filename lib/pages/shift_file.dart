@@ -74,7 +74,10 @@ class ShiftFile extends ConsumerWidget {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text('ファイル入力'),
+          title: const Text(
+            'ファイル入力',
+            style: TextStyle(color: Colors.black, fontSize: 20),
+          ),
           content: const Text(
               'シフト表を更新するファイルを選択してください。\n※現在のシフト表は上書きされるため、事前にファイル出力しておくことを推奨します。'),
           actions: [

@@ -7,7 +7,6 @@ import 'package:shift_calendar/dialog/time_edit_dialog.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/provider/shift_calendar_provider.dart';
-import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 
@@ -22,10 +21,10 @@ class ShiftEditDetail extends ConsumerWidget {
         ref.read(shiftCalendarProvider.notifier);
     ShiftTableNotifier shiftTableController =
         ref.read(shiftTableProvider.notifier);
-    ShiftRecordNotifier shiftRecordController =
-        ref.read(shiftRecordProvider.notifier);
-    // シフトレコード全件取得(監視)
-    List<ShiftRecordModel> listItems = ref.watch(shiftRecordProvider);
+    // 更新監視用
+    ref.watch(shiftTableProvider);
+    List<ShiftRecordModel> listItems =
+        ShiftRecordSql.getShiftRecordAll(shiftTableId: shiftData.id);
 
     return Scaffold(
       appBar: AppBar(
@@ -75,7 +74,7 @@ class ShiftEditDetail extends ConsumerWidget {
               child: ReorderableListView.builder(
                   itemBuilder: (context, index) {
                     return _listData(shiftData, listItems, index, context, ref,
-                        shiftCalendarController, shiftRecordController);
+                        shiftCalendarController, shiftTableController);
                   },
                   itemCount: listItems.length,
                   onReorder: (int oldIndex, int newIndex) {
@@ -89,7 +88,7 @@ class ShiftEditDetail extends ConsumerWidget {
                     ShiftRecordSql.update(recordList: listItems);
                     // 画面更新処理
                     shiftCalendarController.update();
-                    shiftRecordController.update(shiftData.id);
+                    shiftTableController.update();
                   },
                   proxyDecorator: (widget, _, __) {
                     return Opacity(opacity: 0.5, child: widget);
@@ -101,6 +100,7 @@ class ShiftEditDetail extends ConsumerWidget {
         onPressed: () {
           // 新規作成データを生成
           ShiftRecordModel recordData = ShiftRecordModel(
+              id: ShiftRecordSql.generateId(),
               shiftTableId: shiftData.id,
               orderNum:
                   ShiftRecordSql.generateOrderNum(shiftTableId: shiftData.id),
@@ -167,33 +167,33 @@ class ShiftEditDetail extends ConsumerWidget {
       BuildContext context,
       WidgetRef ref,
       ShiftCalendarNotifier shiftCalendarController,
-      ShiftRecordNotifier shiftRecordController) {
+      ShiftTableNotifier shiftTableController) {
     // シフト基準日を計算
+    ShiftRecordModel item = itemList[index];
     DateFormat dateFormat = DateFormat('yyyy/MM/dd');
     DateTime date = dateFormat.parseStrict(shiftData.baseDate);
-    String baseDate = dateFormat.format(date.add(Duration(days: index)));
-    ShiftRecordModel item = itemList[index];
+    String baseDate =
+        dateFormat.format(date.add(Duration(days: item.orderNum)));
     return Card(
-        key: Key(item.orderNum.toString()), // キー指定
+        key: Key(item.id.toString()), // キー指定
         child: Dismissible(
-            key: Key(item.orderNum.toString()),
+            key: Key(item.id.toString()),
             onDismissed: (DismissDirection direction) {
               // リスト削除処理
-              ShiftRecordSql.delete(
-                  shiftTableId: item.shiftTableId, orderNum: item.orderNum);
+              ShiftRecordSql.delete(id: item.id);
               // 順番を更新
               List<ShiftRecordModel> items = ShiftRecordSql.getShiftRecordAll(
                   shiftTableId: item.shiftTableId);
-              for (int i = 0; i < items.length; i++) {
+              for (int i = index; i < items.length; i++) {
                 items[i].orderNum = i;
               }
               ShiftRecordSql.update(recordList: items);
               // 画面を更新
               shiftCalendarController.update();
-              shiftRecordController.update(item.shiftTableId);
+              shiftTableController.update();
               // メッセージ
               Fluttertoast.showToast(
-                  msg: '【${item.startTime}～${item.endTime}】\nシフト時間を削除しました。',
+                  msg: 'シフトを削除しました。',
                   backgroundColor: Colors.black,
                   textColor: Colors.white,
                   fontSize: 16.0);
@@ -204,17 +204,18 @@ class ShiftEditDetail extends ConsumerWidget {
                 context: context,
                 builder: (BuildContext context) {
                   return AlertDialog(
-                    title:
-                        Text('${item.startTime}～${item.endTime}'), // ダイアログのタイトル
-                    content: const Text('シフト時間を削除しますか？'), // ダイアログのメッセージ
+                    title: Text('シフト基準日: $baseDate',
+                        style: const TextStyle(
+                            color: Colors.black, fontSize: 20)), // ダイアログのタイトル
+                    content: const Text('シフトを削除しますか？'), // ダイアログのメッセージ
                     actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(false),
-                        child: const Text('キャンセル'),
-                      ),
                       TextButton(
                         onPressed: () => Navigator.of(context).pop(true),
                         child: const Text('削除'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: const Text('キャンセル'),
                       ),
                     ],
                   );
@@ -278,7 +279,7 @@ class ShiftEditDetail extends ConsumerWidget {
                           ShiftRecordSql.update(recordList: [item]);
                           // 前画面を更新
                           shiftCalendarController.update();
-                          shiftRecordController.update(item.shiftTableId);
+                          shiftTableController.update();
                         }),
                   ),
                 ]))));

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 class ShiftRecordModel {
+  int id;
   int shiftTableId;
   int orderNum;
   String startTime;
@@ -8,6 +9,7 @@ class ShiftRecordModel {
   bool holidayFlag;
 
   ShiftRecordModel({
+    required this.id,
     required this.shiftTableId,
     required this.orderNum,
     required this.startTime,
@@ -17,6 +19,7 @@ class ShiftRecordModel {
 
   factory ShiftRecordModel.fromJson(Map<String, dynamic> json) =>
       ShiftRecordModel(
+        id: json["id"],
         shiftTableId: json["shiftTableId"],
         orderNum: json["orderNum"],
         startTime: json["startTime"],
@@ -25,6 +28,7 @@ class ShiftRecordModel {
       );
 
   Map<String, dynamic> toJson() => {
+        "id": id,
         "shiftTableId": shiftTableId,
         "orderNum": orderNum,
         "startTime": startTime,

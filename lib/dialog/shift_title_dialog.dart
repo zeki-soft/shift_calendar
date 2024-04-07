@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/pages/shift_edit_detail.dart';
+import 'package:shift_calendar/provider/shift_calendar_provider.dart';
 import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
@@ -45,16 +46,16 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
 
   @override
   Widget build(BuildContext context) {
+    ShiftCalendarNotifier shiftCalendarController =
+        ref.read(shiftCalendarProvider.notifier);
     ShiftTableNotifier shiftTableController =
         ref.read(shiftTableProvider.notifier);
-    ShiftRecordNotifier shiftRecordController =
-        ref.read(shiftRecordProvider.notifier);
     return AlertDialog(
       insetPadding: const EdgeInsets.all(0), // マージン
       backgroundColor: Colors.white,
       title: Text(
         updateFlag ? 'シフト表 編集' : 'シフト表 新規作成',
-        style: const TextStyle(color: Colors.black),
+        style: const TextStyle(color: Colors.black, fontSize: 20),
       ),
       content: Container(
           width: 300,
@@ -95,9 +96,12 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                     } else {
                       // 新規追加
                       ShiftTableSql.insert(tableList: [shiftData]);
+                      // ID生成
+                      int id = ShiftRecordSql.generateId();
                       // シフトレコードサンプル登録
                       List<ShiftRecordModel> recordList = [
                         ShiftRecordModel(
+                          id: id,
                           shiftTableId: shiftData.id,
                           orderNum: 0,
                           startTime: '09:00',
@@ -105,6 +109,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                           holidayFlag: false,
                         ),
                         ShiftRecordModel(
+                          id: id + 1,
                           shiftTableId: shiftData.id,
                           orderNum: 1,
                           startTime: '12:00',
@@ -112,6 +117,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                           holidayFlag: false,
                         ),
                         ShiftRecordModel(
+                          id: id + 2,
                           shiftTableId: shiftData.id,
                           orderNum: 2,
                           startTime: '15:00',
@@ -122,8 +128,8 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                       ShiftRecordSql.insert(recordList: recordList);
                     }
                     // シフト編集を更新
+                    shiftCalendarController.update();
                     shiftTableController.update();
-                    shiftRecordController.update(shiftData.id);
                     // ダイアログを閉じる
                     Navigator.pop(context);
                     if (!updateFlag) {
