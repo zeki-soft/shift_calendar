@@ -8,12 +8,11 @@ import 'package:shift_calendar/pages/shift_edit_detail.dart';
 import 'package:shift_calendar/provider/shift_calendar_provider.dart';
 import 'package:shift_calendar/provider/shift_record_provider.dart';
 import 'package:shift_calendar/provider/shift_table_provider.dart';
-import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
 
 // シフト編集
 class ShiftEdit extends ConsumerWidget {
-  int _selectValue = 0; // ラジオボタン選択値
+  int _selectValue = -1; // ラジオボタン選択値
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +26,7 @@ class ShiftEdit extends ConsumerWidget {
         ref.read(shiftRecordProvider.notifier);
 
     // ラジオボタン初期選択値
-    _selectValue = 0;
+    _selectValue = -1;
     listItems.forEach((item) {
       if (item.showFlag) {
         _selectValue = item.orderNum;

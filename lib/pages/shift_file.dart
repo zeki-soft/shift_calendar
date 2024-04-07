@@ -2,23 +2,22 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:shift_calendar/model/json_file_model.dart';
-import 'package:shift_calendar/model/json_file_model.dart';
-import 'package:shift_calendar/model/shift_record_model.dart';
+import 'package:shift_calendar/provider/shift_calendar_provider.dart';
+import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
 
-class ShiftFile extends StatefulWidget {
+class ShiftFile extends ConsumerWidget {
   @override
-  _ShiftFileState createState() => _ShiftFileState();
-}
-
-class _ShiftFileState extends State<ShiftFile> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ShiftCalendarNotifier shiftCalendarController =
+        ref.read(shiftCalendarProvider.notifier);
+    ShiftTableNotifier shiftTableController =
+        ref.read(shiftTableProvider.notifier);
     return Scaffold(
       body: Center(
         child: Column(
@@ -38,12 +37,6 @@ class _ShiftFileState extends State<ShiftFile> {
                     fontSize: 16,
                   ),
                 ),
-                Text(
-                  'ファイル連携',
-                  style: TextStyle(
-                    fontSize: 16,
-                  ),
-                )
               ],
             ),
             const SizedBox(height: 5),
@@ -52,7 +45,8 @@ class _ShiftFileState extends State<ShiftFile> {
               children: [
                 // ファイル入力
                 FloatingActionButton(
-                  onPressed: inputFileAction,
+                  onPressed: () => inputFileAction(
+                      context, shiftCalendarController, shiftTableController),
                   tooltip: 'ファイル入力',
                   child: const Icon(Icons.file_open),
                 ),
@@ -61,12 +55,6 @@ class _ShiftFileState extends State<ShiftFile> {
                   onPressed: outputFileAction,
                   tooltip: 'ファイル出力',
                   child: const Icon(Icons.file_download),
-                ),
-                // ファイル連携
-                FloatingActionButton(
-                  onPressed: inputFileAction,
-                  tooltip: 'ファイル連携',
-                  child: const Icon(Icons.file_present),
                 ),
               ],
             ),
@@ -77,7 +65,10 @@ class _ShiftFileState extends State<ShiftFile> {
   }
 
   // ファイル入力
-  Future inputFileAction() async {
+  Future inputFileAction(
+      BuildContext context,
+      ShiftCalendarNotifier shiftCalendarController,
+      ShiftTableNotifier shiftTableController) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -113,6 +104,9 @@ class _ShiftFileState extends State<ShiftFile> {
                     // インポート
                     ShiftTableSql.insert(tableList: jsonModel.tableList);
                     ShiftRecordSql.insert(recordList: jsonModel.recordList);
+                    // 画面更新
+                    shiftCalendarController.update();
+                    shiftTableController.update();
                     // メッセージ表示
                     Fluttertoast.showToast(
                         msg: 'シフト表をインポートしました。',
