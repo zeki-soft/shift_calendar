@@ -7,7 +7,7 @@ class ShiftTableSql extends CommonSql {
   // ID生成(初期値:0)
   static int generateId() {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT IFNULL(MAX(id), 0) AS id FROM shift_table
+        SELECT IFNULL(MAX(id), -1) AS id FROM shift_table
         ''');
     int id = 0;
     if (resultSet.isNotEmpty) {
@@ -20,7 +20,7 @@ class ShiftTableSql extends CommonSql {
   // 順番生成(初期値:0)
   static int generateOrderNum() {
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT IFNULL(MAX(order_num), 0) AS order_num FROM shift_table
+        SELECT IFNULL(MAX(order_num), -1) AS order_num FROM shift_table
         ''');
     int orderNum = 0;
     if (resultSet.isNotEmpty) {

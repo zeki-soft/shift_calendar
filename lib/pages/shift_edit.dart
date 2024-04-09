@@ -6,7 +6,6 @@ import 'package:shift_calendar/dialog/shift_title_dialog.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/pages/shift_edit_detail.dart';
 import 'package:shift_calendar/provider/shift_calendar_provider.dart';
-import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
 
 // シフト編集
@@ -17,10 +16,7 @@ class ShiftEdit extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ShiftCalendarNotifier shiftCalendarController =
         ref.read(shiftCalendarProvider.notifier);
-    ShiftTableNotifier shiftTableController =
-        ref.read(shiftTableProvider.notifier);
-// シフト表全件取得(監視)
-    // List<ShiftTableModel> listItems = ref.watch(shiftTableProvider);
+    // 更新監視用
     ref.watch(shiftCalendarProvider);
     List<ShiftTableModel> listItems = ShiftTableSql.getShiftTableAll();
     // ラジオボタン初期選択値
@@ -42,22 +38,44 @@ class ShiftEdit extends ConsumerWidget {
               // 入れ替え可能リスト
               child: ReorderableListView.builder(
             itemBuilder: (context, index) {
-              return _listData(listItems, index, context, ref,
-                  shiftCalendarController, shiftTableController);
+              return _listData(
+                  listItems, index, context, ref, shiftCalendarController);
             },
             itemCount: listItems.length,
             onReorder: (int oldIndex, int newIndex) {
+              print('<入れ替え前>');
+              for (int i = 0; i < listItems.length; i++) {
+                print(
+                    '$i : ${listItems[i].orderNum} ${listItems[i].shiftName}');
+              }
               // 入れ替え処理(old⇒newのindexに移動)
               if (oldIndex < newIndex) {
+                // 前方移動
                 newIndex -= 1;
+                for (int i = oldIndex; i < newIndex; i++) {
+                  listItems[i + 1].orderNum = i;
+                }
+              } else {
+                // 後方移動
+                for (int i = oldIndex; i > newIndex; i--) {
+                  listItems[i - 1].orderNum = i;
+                }
               }
-              listItems[oldIndex].orderNum = newIndex;
+              // 直接指定した項目の移動
               listItems[newIndex].orderNum = oldIndex;
+              // listItems[oldIndex].orderNum = newIndex;
+              // listItems[newIndex].orderNum = oldIndex;
+
+              print('<入れ替え後>');
+              for (int i = 0; i < listItems.length; i++) {
+                print(
+                    '$i : ${listItems[i].orderNum} ${listItems[i].shiftName}');
+              }
+
               // DB更新処理
               ShiftTableSql.update(tableList: listItems);
               // 画面更新処理
               shiftCalendarController.update();
-              shiftTableController.update();
             },
             proxyDecorator: (widget, _, __) {
               return Opacity(opacity: 0.5, child: widget);
@@ -121,8 +139,7 @@ class ShiftEdit extends ConsumerWidget {
       int index,
       BuildContext context,
       WidgetRef ref,
-      ShiftCalendarNotifier shiftCalendarController,
-      ShiftTableNotifier shiftTableController) {
+      ShiftCalendarNotifier shiftCalendarController) {
     ShiftTableModel shiftData = itemList[index];
     return Card(
         key: Key(shiftData.id.toString()), // キー指定
@@ -140,7 +157,6 @@ class ShiftEdit extends ConsumerWidget {
               ShiftTableSql.updateList(list: items);
               // 画面を更新
               shiftCalendarController.update();
-              shiftTableController.update();
               // メッセージ
               Fluttertoast.showToast(
                   msg: '【${shiftData.shiftName}】\nシフトを削除しました。',
@@ -180,7 +196,6 @@ class ShiftEdit extends ConsumerWidget {
                 onTap: () {
                   // シフト編集を更新
                   shiftCalendarController.update();
-                  shiftTableController.update();
                   // シフト編集詳細へ遷移
                   Navigator.push(
                     context,
@@ -205,7 +220,6 @@ class ShiftEdit extends ConsumerWidget {
                           ShiftTableSql.update(tableList: [shiftData]);
                           // 画面更新処理
                           shiftCalendarController.update();
-                          shiftTableController.update();
                         }),
                   ),
                   // シフト名

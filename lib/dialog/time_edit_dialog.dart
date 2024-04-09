@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/provider/shift_calendar_provider.dart';
-import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 
 // シフト時間、備考編集ダイアログ
@@ -58,9 +57,6 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
   Widget build(BuildContext context) {
     ShiftCalendarNotifier shiftCalendarController =
         ref.read(shiftCalendarProvider.notifier);
-    ShiftTableNotifier shiftTableController =
-        ref.read(shiftTableProvider.notifier);
-
     // シフト基準日
     DateFormat dateFormat = DateFormat('yyyy/MM/dd');
     DateTime baseDate = dateFormat
@@ -147,7 +143,6 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
                   }
                   // シフト編集を更新
                   shiftCalendarController.update();
-                  shiftTableController.update();
                   // ダイアログを閉じる
                   Navigator.pop(context);
                 },

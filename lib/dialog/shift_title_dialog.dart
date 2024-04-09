@@ -6,7 +6,6 @@ import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/pages/shift_edit_detail.dart';
 import 'package:shift_calendar/provider/shift_calendar_provider.dart';
-import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
 
@@ -47,8 +46,6 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
   Widget build(BuildContext context) {
     ShiftCalendarNotifier shiftCalendarController =
         ref.read(shiftCalendarProvider.notifier);
-    // ShiftTableNotifier shiftTableController =
-    //     ref.read(shiftTableProvider.notifier);
     return AlertDialog(
       insetPadding: const EdgeInsets.all(0), // マージン
       backgroundColor: Colors.white,

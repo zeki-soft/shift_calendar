@@ -7,7 +7,6 @@ import 'package:shift_calendar/dialog/time_edit_dialog.dart';
 import 'package:shift_calendar/model/shift_record_model.dart';
 import 'package:shift_calendar/model/shift_table_model.dart';
 import 'package:shift_calendar/provider/shift_calendar_provider.dart';
-import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 
 // シフト編集詳細
@@ -19,9 +18,7 @@ class ShiftEditDetail extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ShiftCalendarNotifier shiftCalendarController =
         ref.read(shiftCalendarProvider.notifier);
-    ShiftTableNotifier shiftTableController =
-        ref.read(shiftTableProvider.notifier);
-    // 更新監視用 TODO
+    // 更新監視用
     ref.watch(shiftCalendarProvider);
     List<ShiftRecordModel> listItems =
         ShiftRecordSql.getShiftRecordAll(shiftTableId: shiftData.id);
@@ -33,7 +30,6 @@ class ShiftEditDetail extends ConsumerWidget {
           onPressed: () {
             // 前画面を更新
             shiftCalendarController.update();
-            shiftTableController.update();
             // 画面を閉じる
             Navigator.pop(context);
           },
@@ -74,7 +70,7 @@ class ShiftEditDetail extends ConsumerWidget {
               child: ReorderableListView.builder(
                   itemBuilder: (context, index) {
                     return _listData(shiftData, listItems, index, context, ref,
-                        shiftCalendarController, shiftTableController);
+                        shiftCalendarController);
                   },
                   itemCount: listItems.length,
                   onReorder: (int oldIndex, int newIndex) {
@@ -88,7 +84,6 @@ class ShiftEditDetail extends ConsumerWidget {
                     ShiftRecordSql.update(recordList: listItems);
                     // 画面更新処理
                     shiftCalendarController.update();
-                    shiftTableController.update();
                   },
                   proxyDecorator: (widget, _, __) {
                     return Opacity(opacity: 0.5, child: widget);
@@ -167,8 +162,7 @@ class ShiftEditDetail extends ConsumerWidget {
       int index,
       BuildContext context,
       WidgetRef ref,
-      ShiftCalendarNotifier shiftCalendarController,
-      ShiftTableNotifier shiftTableController) {
+      ShiftCalendarNotifier shiftCalendarController) {
     // シフト基準日を計算
     ShiftRecordModel item = itemList[index];
     DateFormat dateFormat = DateFormat('yyyy/MM/dd');
@@ -191,7 +185,6 @@ class ShiftEditDetail extends ConsumerWidget {
               ShiftRecordSql.update(recordList: items);
               // 画面を更新
               shiftCalendarController.update();
-              shiftTableController.update();
               // メッセージ
               Fluttertoast.showToast(
                   msg: 'シフトを削除しました。',
@@ -280,7 +273,6 @@ class ShiftEditDetail extends ConsumerWidget {
                           ShiftRecordSql.update(recordList: [item]);
                           // 前画面を更新
                           shiftCalendarController.update();
-                          shiftTableController.update();
                         }),
                   ),
                 ]))));

@@ -7,7 +7,6 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:shift_calendar/model/json_file_model.dart';
 import 'package:shift_calendar/provider/shift_calendar_provider.dart';
-import 'package:shift_calendar/provider/shift_table_provider.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
 
@@ -16,8 +15,6 @@ class ShiftFile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ShiftCalendarNotifier shiftCalendarController =
         ref.read(shiftCalendarProvider.notifier);
-    ShiftTableNotifier shiftTableController =
-        ref.read(shiftTableProvider.notifier);
     return Scaffold(
       body: Center(
         child: Column(
@@ -45,8 +42,8 @@ class ShiftFile extends ConsumerWidget {
               children: [
                 // ファイル入力
                 FloatingActionButton(
-                  onPressed: () => inputFileAction(
-                      context, shiftCalendarController, shiftTableController),
+                  onPressed: () =>
+                      inputFileAction(context, shiftCalendarController),
                   tooltip: 'ファイル入力',
                   child: const Icon(Icons.file_open),
                 ),
@@ -65,10 +62,8 @@ class ShiftFile extends ConsumerWidget {
   }
 
   // ファイル入力
-  Future inputFileAction(
-      BuildContext context,
-      ShiftCalendarNotifier shiftCalendarController,
-      ShiftTableNotifier shiftTableController) async {
+  Future inputFileAction(BuildContext context,
+      ShiftCalendarNotifier shiftCalendarController) async {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -109,7 +104,6 @@ class ShiftFile extends ConsumerWidget {
                     ShiftRecordSql.insert(recordList: jsonModel.recordList);
                     // 画面更新
                     shiftCalendarController.update();
-                    shiftTableController.update();
                     // メッセージ表示
                     Fluttertoast.showToast(
                         msg: 'シフト表をインポートしました。',
