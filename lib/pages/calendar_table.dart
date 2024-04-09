@@ -45,7 +45,7 @@ class CalendarTable extends ConsumerWidget {
                     fontStyle: FontStyle.normal,
                     fontSize: 15,
                     color: Colors.grey))),
-        headerDateFormat: 'yyyy年MM月 ${shiftName}',
+        headerDateFormat: 'yyyy年MM月 $shiftName',
         controller: calendarController,
         dataSource: _getCalendarDataSource(listItems),
       ),
@@ -55,7 +55,7 @@ class CalendarTable extends ConsumerWidget {
 
 _AppointmentDataSource _getCalendarDataSource(List<ShiftDataModel> dataList) {
   List<Appointment> appointments = <Appointment>[];
-  final dateFormatter = DateFormat("yyyy/MM/dd");
+  final dateFormatter = DateFormat('yyyy/MM/dd');
   int roopNum = dataList.length; // 繰り返し回数
   for (ShiftDataModel data in dataList) {
     // シフト基準日(加算)
@@ -80,10 +80,11 @@ _AppointmentDataSource _getCalendarDataSource(List<ShiftDataModel> dataList) {
         color: Colors.blue,
         recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
       ));
-      // 終了時間
+      // 終了時間(イベント順番を調整するため5秒加算)
+      DateTime endBaseDate = baseDate.add(const Duration(seconds: 10));
       appointments.add(Appointment(
-        startTime: baseDate,
-        endTime: baseDate,
+        startTime: endBaseDate,
+        endTime: endBaseDate,
         subject: data.endTime,
         color: Colors.blue,
         recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
@@ -94,6 +95,7 @@ _AppointmentDataSource _getCalendarDataSource(List<ShiftDataModel> dataList) {
   return _AppointmentDataSource(appointments);
 }
 
+// イベントソース
 class _AppointmentDataSource extends CalendarDataSource {
   _AppointmentDataSource(List<Appointment> source) {
     appointments = source;

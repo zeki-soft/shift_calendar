@@ -15,13 +15,14 @@ class ShiftEdit extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // シフト表全件取得(監視)
-    List<ShiftTableModel> listItems = ref.watch(shiftTableProvider);
     ShiftCalendarNotifier shiftCalendarController =
         ref.read(shiftCalendarProvider.notifier);
     ShiftTableNotifier shiftTableController =
         ref.read(shiftTableProvider.notifier);
-
+// シフト表全件取得(監視)
+    // List<ShiftTableModel> listItems = ref.watch(shiftTableProvider);
+    ref.watch(shiftCalendarProvider);
+    List<ShiftTableModel> listItems = ShiftTableSql.getShiftTableAll();
     // ラジオボタン初期選択値
     _selectValue = -1;
     listItems.forEach((item) {
@@ -53,8 +54,7 @@ class ShiftEdit extends ConsumerWidget {
               listItems[oldIndex].orderNum = newIndex;
               listItems[newIndex].orderNum = oldIndex;
               // DB更新処理
-              ShiftTableSql.update(model: listItems[oldIndex]);
-              ShiftTableSql.update(model: listItems[newIndex]);
+              ShiftTableSql.update(tableList: listItems);
               // 画面更新処理
               shiftCalendarController.update();
               shiftTableController.update();
@@ -63,6 +63,7 @@ class ShiftEdit extends ConsumerWidget {
               return Opacity(opacity: 0.5, child: widget);
             },
           )),
+          const SizedBox(height: 80)
         ],
       ),
       // 追加ボタン
@@ -201,7 +202,7 @@ class ShiftEdit extends ConsumerWidget {
                           ShiftTableSql.offShowFlag();
                           // 表示フラグ更新
                           shiftData.showFlag = true;
-                          ShiftTableSql.update(model: shiftData);
+                          ShiftTableSql.update(tableList: [shiftData]);
                           // 画面更新処理
                           shiftCalendarController.update();
                           shiftTableController.update();

@@ -21,8 +21,8 @@ class ShiftEditDetail extends ConsumerWidget {
         ref.read(shiftCalendarProvider.notifier);
     ShiftTableNotifier shiftTableController =
         ref.read(shiftTableProvider.notifier);
-    // 更新監視用
-    ref.watch(shiftTableProvider);
+    // 更新監視用 TODO
+    ref.watch(shiftCalendarProvider);
     List<ShiftRecordModel> listItems =
         ShiftRecordSql.getShiftRecordAll(shiftTableId: shiftData.id);
 
@@ -92,7 +92,8 @@ class ShiftEditDetail extends ConsumerWidget {
                   },
                   proxyDecorator: (widget, _, __) {
                     return Opacity(opacity: 0.5, child: widget);
-                  }))
+                  })),
+          const SizedBox(height: 50)
         ],
       ),
       // 追加ボタン

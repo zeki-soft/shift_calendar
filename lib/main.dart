@@ -28,8 +28,8 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
   static const List<Tab> myTabs = <Tab>[
-    Tab(text: 'シフト表'),
-    Tab(text: 'シフト編集'),
+    Tab(text: '勤務表'),
+    Tab(text: '編集'),
     Tab(text: 'ファイル'),
   ];
 
@@ -74,9 +74,9 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
                         children: myTabs.map((Tab tab) {
                           // タブ選択
                           final String label = tab.text!;
-                          if (label == 'シフト表') {
+                          if (label == '勤務表') {
                             return CalendarTable();
-                          } else if (label == 'シフト編集') {
+                          } else if (label == '編集') {
                             return ShiftEdit();
                           } else {
                             return ShiftFile();

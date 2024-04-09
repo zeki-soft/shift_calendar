@@ -159,7 +159,7 @@ class ShiftFile extends ConsumerWidget {
 
     String? outputFile = await FilePicker.platform.saveFile(
       dialogTitle: '現在のシフト表をファイル出力します:',
-      fileName: '交代制シフト表_$date.json',
+      fileName: '交替勤務表_$date.json',
       bytes: utf8.encode(json), // 出力内容(UTF-8)
     );
 

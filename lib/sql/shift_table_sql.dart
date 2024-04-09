@@ -54,19 +54,21 @@ class ShiftTableSql extends CommonSql {
   }
 
   // 更新
-  static void update({required ShiftTableModel model}) {
+  static void update({required List<ShiftTableModel> tableList}) {
     final stmt = CommonSql.db.prepare('''
           UPDATE shift_table SET 
           shift_name = ?, show_flag = ?, base_date = ?, order_num = ?
           WHERE id = ?
         ''');
-    stmt.execute([
-      model.shiftName,
-      model.showFlag,
-      model.baseDate,
-      model.orderNum,
-      model.id,
-    ]);
+    tableList.forEach((data) {
+      stmt.execute([
+        data.shiftName,
+        data.showFlag,
+        data.baseDate,
+        data.orderNum,
+        data.id,
+      ]);
+    });
     stmt.dispose();
   }
 
@@ -130,7 +132,9 @@ class ShiftTableSql extends CommonSql {
   static List<ShiftTableModel> getShiftTableAll() {
     try {
       final ResultSet resultSet = CommonSql.db.select('''
-        SELECT id, shift_name, show_flag, base_date, order_num FROM shift_table
+        SELECT id, shift_name, show_flag, base_date, order_num 
+        FROM shift_table
+        ORDER BY order_num ASC;
         ''');
       List<ShiftTableModel> list = [];
       for (Row row in resultSet) {
