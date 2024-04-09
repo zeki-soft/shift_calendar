@@ -43,11 +43,6 @@ class ShiftEdit extends ConsumerWidget {
             },
             itemCount: listItems.length,
             onReorder: (int oldIndex, int newIndex) {
-              print('<入れ替え前>');
-              for (int i = 0; i < listItems.length; i++) {
-                print(
-                    '$i : ${listItems[i].orderNum} ${listItems[i].shiftName}');
-              }
               // 入れ替え処理(old⇒newのindexに移動)
               if (oldIndex < newIndex) {
                 // 前方移動
@@ -62,16 +57,7 @@ class ShiftEdit extends ConsumerWidget {
                 }
               }
               // 直接指定した項目の移動
-              listItems[newIndex].orderNum = oldIndex;
-              // listItems[oldIndex].orderNum = newIndex;
-              // listItems[newIndex].orderNum = oldIndex;
-
-              print('<入れ替え後>');
-              for (int i = 0; i < listItems.length; i++) {
-                print(
-                    '$i : ${listItems[i].orderNum} ${listItems[i].shiftName}');
-              }
-
+              listItems[oldIndex].orderNum = newIndex;
               // DB更新処理
               ShiftTableSql.update(tableList: listItems);
               // 画面更新処理

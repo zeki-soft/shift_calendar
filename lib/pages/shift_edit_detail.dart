@@ -76,10 +76,19 @@ class ShiftEditDetail extends ConsumerWidget {
                   onReorder: (int oldIndex, int newIndex) {
                     // 入れ替え処理(old⇒newのindexに移動)
                     if (oldIndex < newIndex) {
+                      // 前方移動
                       newIndex -= 1;
+                      for (int i = oldIndex; i < newIndex; i++) {
+                        listItems[i + 1].orderNum = i;
+                      }
+                    } else {
+                      // 後方移動
+                      for (int i = oldIndex; i > newIndex; i--) {
+                        listItems[i - 1].orderNum = i;
+                      }
                     }
+                    // 直接指定した項目の移動
                     listItems[oldIndex].orderNum = newIndex;
-                    listItems[newIndex].orderNum = oldIndex;
                     // DB更新処理
                     ShiftRecordSql.update(recordList: listItems);
                     // 画面更新処理
