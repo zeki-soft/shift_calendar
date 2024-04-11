@@ -230,23 +230,19 @@ class ShiftEditDetail extends ConsumerWidget {
             ),
             child: ListTile(
                 onTap: () => {
-                      // 休日でない場合のみ
-                      if (!item.holidayFlag)
-                        {
-                          // シフト時間を編集
-                          showDialog<void>(
-                              barrierColor: Colors.grey.withOpacity(0.8),
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (_) {
-                                // 編集ダイアログ表示
-                                return TimeEditDialog(
-                                    shiftData: shiftData,
-                                    recordData: item,
-                                    ref: ref,
-                                    updateFlag: true);
-                              })
-                        }
+                      // シフト時間を編集
+                      showDialog<void>(
+                          barrierColor: Colors.grey.withOpacity(0.8),
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (_) {
+                            // 編集ダイアログ表示
+                            return TimeEditDialog(
+                                shiftData: shiftData,
+                                recordData: item,
+                                ref: ref,
+                                updateFlag: true);
+                          })
                     },
                 title: Row(children: [
                   Expanded(

@@ -46,4 +46,18 @@ class CommonSql {
       print(e);
     }
   }
+
+  // テーブル存在チェック
+  static bool existTable() {
+    final ResultSet resultSet =
+        CommonSql.db.select('SELECT COUNT(*) FROM shift_table');
+    var count = resultSet.first[0];
+    if (count == 0) {
+      // レコードなし(初期化)
+      return false;
+    } else {
+      // レコードあり
+      return true;
+    }
+  }
 }

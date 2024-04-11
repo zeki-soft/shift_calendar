@@ -106,10 +106,10 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
                   if (_holidayFlag) {
                     // 休日チェックONの場合
                     if (_startTimeController.text == '') {
-                      _startTimeController.text == '09:00';
+                      _startTimeController.text = '09:00';
                     }
                     if (_endTimeController.text == '') {
-                      _endTimeController.text == '18:00';
+                      _endTimeController.text = '18:00';
                     }
                   } else {
                     // 入力チェック
