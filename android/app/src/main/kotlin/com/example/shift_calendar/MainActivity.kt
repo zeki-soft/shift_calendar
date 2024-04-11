@@ -1,4 +1,4 @@
-package com.example.shift_calendar
+package com.zekisoft.shift_calendar
 
 import io.flutter.embedding.android.FlutterActivity
 
