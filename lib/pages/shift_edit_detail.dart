@@ -24,111 +24,114 @@ class ShiftEditDetail extends ConsumerWidget {
         ShiftRecordSql.getShiftRecordAll(shiftTableId: shiftData.id);
 
     return Scaffold(
-      appBar: AppBar(
-        // 戻るボタン(バックボタン?)
-        leading: IconButton(
-          onPressed: () {
-            // 前画面を更新
-            shiftCalendarController.update();
-            // 画面を閉じる
-            Navigator.pop(context);
-          },
-          icon: const Icon(Icons.arrow_back),
+        appBar: AppBar(
+          // 戻るボタン(バックボタン?)
+          leading: IconButton(
+            onPressed: () {
+              // 前画面を更新
+              shiftCalendarController.update();
+              // 画面を閉じる
+              Navigator.pop(context);
+            },
+            icon: const Icon(Icons.arrow_back),
+          ),
+          // シフト名(タイトル)
+          title: Text(shiftData.shiftName),
+          // 右側のアイコン一覧
+          actions: <Widget>[
+            // シフト名編集ボタン
+            IconButton(
+              onPressed: () async {
+                // シフト名、シフト基準日を編集するダイアログ表示
+                final result = await showDialog<bool>(
+                    barrierColor: Colors.grey.withOpacity(0.8),
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => PopScope(
+                        canPop: false,
+                        child: ShiftTitleDialog(
+                            shiftData: shiftData, ref: ref, updateFlag: true)));
+                if (result != null && result) {
+                  // ダイアログを閉じた際の処理
+                  print('');
+                }
+              },
+              icon: const Icon(Icons.edit),
+            )
+          ],
         ),
-        // シフト名(タイトル)
-        title: Text(shiftData.shiftName),
-        // 右側のアイコン一覧
-        actions: <Widget>[
-          // シフト名編集ボタン
-          IconButton(
-            onPressed: () async {
-              // シフト名、シフト基準日を編集するダイアログ表示
-              final result = await showDialog<bool>(
+        body: Column(
+          children: [
+            // シフト詳細ヘッダー
+            _listDataHeader(),
+            // シフト詳細
+            Expanded(
+                // 入れ替え可能リスト
+                child: ReorderableListView.builder(
+                    itemBuilder: (context, index) {
+                      return _listData(shiftData, listItems, index, context,
+                          ref, shiftCalendarController);
+                    },
+                    itemCount: listItems.length,
+                    onReorder: (int oldIndex, int newIndex) {
+                      // 入れ替え処理(old⇒newのindexに移動)
+                      if (oldIndex < newIndex) {
+                        // 前方移動
+                        newIndex -= 1;
+                        for (int i = oldIndex; i < newIndex; i++) {
+                          listItems[i + 1].orderNum = i;
+                        }
+                      } else {
+                        // 後方移動
+                        for (int i = oldIndex; i > newIndex; i--) {
+                          listItems[i - 1].orderNum = i;
+                        }
+                      }
+                      // 直接指定した項目の移動
+                      listItems[oldIndex].orderNum = newIndex;
+                      // DB更新処理
+                      ShiftRecordSql.update(recordList: listItems);
+                      // 画面更新処理
+                      shiftCalendarController.update();
+                    },
+                    proxyDecorator: (widget, _, __) {
+                      return Opacity(opacity: 0.5, child: widget);
+                    })),
+            const SizedBox(height: 70)
+          ],
+        ),
+        // 追加ボタン
+        floatingActionButton: SizedBox(
+          width: 64.0,
+          height: 64.0,
+          child: FloatingActionButton(
+            onPressed: () {
+              // 新規作成データを生成
+              ShiftRecordModel recordData = ShiftRecordModel(
+                  id: ShiftRecordSql.generateId(),
+                  shiftTableId: shiftData.id,
+                  orderNum: ShiftRecordSql.generateOrderNum(
+                      shiftTableId: shiftData.id),
+                  startTime: '',
+                  endTime: '',
+                  holidayFlag: false);
+              // シフトレコード(新規作成)のダイアログ表示
+              showDialog<void>(
                   barrierColor: Colors.grey.withOpacity(0.8),
                   context: context,
                   barrierDismissible: false,
-                  builder: (context) => PopScope(
-                      canPop: false,
-                      child: ShiftTitleDialog(
-                          shiftData: shiftData, ref: ref, updateFlag: true)));
-              if (result != null && result) {
-                // ダイアログを閉じた際の処理
-                print('');
-              }
+                  builder: (_) {
+                    return TimeEditDialog(
+                        shiftData: shiftData,
+                        recordData: recordData,
+                        ref: ref,
+                        updateFlag: false);
+                  });
             },
-            icon: const Icon(Icons.edit),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          // シフト詳細ヘッダー
-          _listDataHeader(),
-          // シフト詳細
-          Expanded(
-              // 入れ替え可能リスト
-              child: ReorderableListView.builder(
-                  itemBuilder: (context, index) {
-                    return _listData(shiftData, listItems, index, context, ref,
-                        shiftCalendarController);
-                  },
-                  itemCount: listItems.length,
-                  onReorder: (int oldIndex, int newIndex) {
-                    // 入れ替え処理(old⇒newのindexに移動)
-                    if (oldIndex < newIndex) {
-                      // 前方移動
-                      newIndex -= 1;
-                      for (int i = oldIndex; i < newIndex; i++) {
-                        listItems[i + 1].orderNum = i;
-                      }
-                    } else {
-                      // 後方移動
-                      for (int i = oldIndex; i > newIndex; i--) {
-                        listItems[i - 1].orderNum = i;
-                      }
-                    }
-                    // 直接指定した項目の移動
-                    listItems[oldIndex].orderNum = newIndex;
-                    // DB更新処理
-                    ShiftRecordSql.update(recordList: listItems);
-                    // 画面更新処理
-                    shiftCalendarController.update();
-                  },
-                  proxyDecorator: (widget, _, __) {
-                    return Opacity(opacity: 0.5, child: widget);
-                  })),
-          const SizedBox(height: 50)
-        ],
-      ),
-      // 追加ボタン
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // 新規作成データを生成
-          ShiftRecordModel recordData = ShiftRecordModel(
-              id: ShiftRecordSql.generateId(),
-              shiftTableId: shiftData.id,
-              orderNum:
-                  ShiftRecordSql.generateOrderNum(shiftTableId: shiftData.id),
-              startTime: '',
-              endTime: '',
-              holidayFlag: false);
-          // シフトレコード(新規作成)のダイアログ表示
-          showDialog<void>(
-              barrierColor: Colors.grey.withOpacity(0.8),
-              context: context,
-              barrierDismissible: false,
-              builder: (_) {
-                return TimeEditDialog(
-                    shiftData: shiftData,
-                    recordData: recordData,
-                    ref: ref,
-                    updateFlag: false);
-              });
-        },
-        backgroundColor: Colors.grey[300],
-        child: const Icon(Icons.add),
-      ),
-    );
+            backgroundColor: Colors.grey[300],
+            child: const Icon(Icons.add),
+          ),
+        ));
   }
 
   // シフト一覧ヘッダー
@@ -139,28 +142,36 @@ class ShiftEditDetail extends ConsumerWidget {
             title: Row(children: [
           Expanded(
               flex: 2,
-              child: Text('シフト基準日',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold))),
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('シフト基準日',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)))),
           Expanded(
               flex: 2,
-              child: Text('開始時間',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold))),
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('開始時間',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)))),
           Expanded(
               flex: 2,
-              child: Text('終了時間',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold))),
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('終了時間',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)))),
           Expanded(
               flex: 1,
-              child: Text('休日',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold))),
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('休日',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)))),
         ])));
   }
 
@@ -248,24 +259,30 @@ class ShiftEditDetail extends ConsumerWidget {
                   Expanded(
                       // シフト基準日
                       flex: 2,
-                      child: Text(
-                        baseDate,
-                        textAlign: TextAlign.center,
-                      )),
+                      child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            baseDate,
+                            textAlign: TextAlign.center,
+                          ))),
                   Expanded(
                       // 開始時間
                       flex: 2,
-                      child: Text(
-                        item.holidayFlag ? '' : item.startTime,
-                        textAlign: TextAlign.center,
-                      )),
+                      child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            item.holidayFlag ? '' : item.startTime,
+                            textAlign: TextAlign.center,
+                          ))),
                   Expanded(
                       // 終了時間
                       flex: 2,
-                      child: Text(
-                        item.holidayFlag ? '' : item.endTime,
-                        textAlign: TextAlign.center,
-                      )),
+                      child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            item.holidayFlag ? '' : item.endTime,
+                            textAlign: TextAlign.center,
+                          ))),
                   Expanded(
                     // 休日
                     flex: 1,

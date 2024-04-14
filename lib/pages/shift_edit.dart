@@ -29,73 +29,76 @@ class ShiftEdit extends ConsumerWidget {
     });
 
     return Scaffold(
-      body: Column(
-        children: [
-          // シフト一覧ヘッダー
-          _listDataHeader(),
-          // シフト一覧
-          Expanded(
-              // 入れ替え可能リスト
-              child: ReorderableListView.builder(
-            itemBuilder: (context, index) {
-              return _listData(
-                  listItems, index, context, ref, shiftCalendarController);
-            },
-            itemCount: listItems.length,
-            onReorder: (int oldIndex, int newIndex) {
-              // 入れ替え処理(old⇒newのindexに移動)
-              if (oldIndex < newIndex) {
-                // 前方移動
-                newIndex -= 1;
-                for (int i = oldIndex; i < newIndex; i++) {
-                  listItems[i + 1].orderNum = i;
+        body: Column(
+          children: [
+            // シフト一覧ヘッダー
+            _listDataHeader(),
+            // シフト一覧
+            Expanded(
+                // 入れ替え可能リスト
+                child: ReorderableListView.builder(
+              itemBuilder: (context, index) {
+                return _listData(
+                    listItems, index, context, ref, shiftCalendarController);
+              },
+              itemCount: listItems.length,
+              onReorder: (int oldIndex, int newIndex) {
+                // 入れ替え処理(old⇒newのindexに移動)
+                if (oldIndex < newIndex) {
+                  // 前方移動
+                  newIndex -= 1;
+                  for (int i = oldIndex; i < newIndex; i++) {
+                    listItems[i + 1].orderNum = i;
+                  }
+                } else {
+                  // 後方移動
+                  for (int i = oldIndex; i > newIndex; i--) {
+                    listItems[i - 1].orderNum = i;
+                  }
                 }
-              } else {
-                // 後方移動
-                for (int i = oldIndex; i > newIndex; i--) {
-                  listItems[i - 1].orderNum = i;
-                }
-              }
-              // 直接指定した項目の移動
-              listItems[oldIndex].orderNum = newIndex;
-              // DB更新処理
-              ShiftTableSql.update(tableList: listItems);
-              // 画面更新処理
-              shiftCalendarController.update();
+                // 直接指定した項目の移動
+                listItems[oldIndex].orderNum = newIndex;
+                // DB更新処理
+                ShiftTableSql.update(tableList: listItems);
+                // 画面更新処理
+                shiftCalendarController.update();
+              },
+              proxyDecorator: (widget, _, __) {
+                return Opacity(opacity: 0.5, child: widget);
+              },
+            )),
+            const SizedBox(height: 70)
+          ],
+        ),
+        // 追加ボタン
+        floatingActionButton: SizedBox(
+          width: 64.0,
+          height: 64.0,
+          child: FloatingActionButton(
+            onPressed: () {
+              // 新規ID取得
+              int id = ShiftTableSql.generateId();
+              // 新規作成データを生成
+              ShiftTableModel shiftData = ShiftTableModel(
+                  id: id, // 新規ID取得
+                  shiftName: '新規シフト',
+                  showFlag: id == 0, // 初回のみ対象
+                  baseDate: DateFormat('yyyy/MM/dd').format(DateTime.now()),
+                  orderNum: ShiftTableSql.generateOrderNum());
+              // シフト編集詳細へ遷移(新規作成)のダイアログ表示
+              showDialog<void>(
+                  barrierColor: Colors.grey.withOpacity(0.8),
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (_) {
+                    return ShiftTitleDialog(
+                        shiftData: shiftData, ref: ref, updateFlag: false);
+                  });
             },
-            proxyDecorator: (widget, _, __) {
-              return Opacity(opacity: 0.5, child: widget);
-            },
-          )),
-          const SizedBox(height: 80)
-        ],
-      ),
-      // 追加ボタン
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // 新規ID取得
-          int id = ShiftTableSql.generateId();
-          // 新規作成データを生成
-          ShiftTableModel shiftData = ShiftTableModel(
-              id: id, // 新規ID取得
-              shiftName: '新規シフト',
-              showFlag: id == 0, // 初回のみ対象
-              baseDate: DateFormat('yyyy/MM/dd').format(DateTime.now()),
-              orderNum: ShiftTableSql.generateOrderNum());
-          // シフト編集詳細へ遷移(新規作成)のダイアログ表示
-          showDialog<void>(
-              barrierColor: Colors.grey.withOpacity(0.8),
-              context: context,
-              barrierDismissible: false,
-              builder: (_) {
-                return ShiftTitleDialog(
-                    shiftData: shiftData, ref: ref, updateFlag: false);
-              });
-        },
-        backgroundColor: Colors.grey[300],
-        child: const Icon(Icons.add),
-      ),
-    );
+            backgroundColor: Colors.grey[300],
+            child: const Icon(Icons.add),
+          ),
+        ));
   }
 
   // シフト一覧ヘッダー
@@ -106,16 +109,20 @@ class ShiftEdit extends ConsumerWidget {
             title: Row(children: [
           Expanded(
               flex: 2,
-              child: Text('シフト表示',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold))),
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('表示',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)))),
           Expanded(
               flex: 7,
-              child: Text('シフト名',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold))),
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('シフト名',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)))),
         ])));
   }
 
@@ -191,7 +198,7 @@ class ShiftEdit extends ConsumerWidget {
                   );
                 },
                 title: Row(children: [
-                  // シフト表示
+                  // 表示チェックボックス
                   Expanded(
                     flex: 2,
                     child: Radio(
