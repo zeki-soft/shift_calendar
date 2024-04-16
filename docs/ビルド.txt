@@ -1,0 +1,10 @@
+【Androidリリースビルド】
+flutter build appbundle
+
+【iOSリリースビルド】
+flutter clean
+flutter build ios
+
+【iOSローカル配信】
+flutter devices
+flutter run -d 0
