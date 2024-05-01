@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shift_calendar/enums/window_enums.dart';
 import 'package:shift_calendar/pages/calendar_table.dart';
 import 'package:shift_calendar/pages/shift_edit.dart';
 import 'package:shift_calendar/pages/shift_file.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shift_calendar/utils/key_manage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,6 +20,15 @@ void main() async {
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
   ]);
+
+  KeyManage.prefs = await SharedPreferences.getInstance();
+  String? windowValue = KeyManage.prefs.getString(KeyManage.windowKey);
+  if (windowValue == null) {
+    // 初期値設定
+    KeyManage.prefs.setString(KeyManage.windowKey, WindowEnums.all.value);
+  } else {
+    KeyManage.windowKeyValue = windowValue;
+  }
 
   runApp(ProviderScope(child: MyApp()));
 }

@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shift_calendar/enums/window_enums.dart';
 import 'package:shift_calendar/model/shift_data_model.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
+import 'package:shift_calendar/utils/key_manage.dart';
+import 'package:shift_calendar/utils/string_util.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 // シフトカレンダーを取得するProvider
@@ -20,6 +23,9 @@ class ShiftCalendarNotifier extends StateNotifier<List<ShiftDataModel>> {
 class _ShiftDataUtil {
   // シフト表データ全件取得
   List<ShiftDataModel> getShiftCalendar() {
+    String showFlagWHere = KeyManage.windowKeyValue == WindowEnums.single.value
+        ? 'WHERE T1.show_flag = 1'
+        : '';
     final ResultSet resultSet = CommonSql.db.select('''
           SELECT 
             T1.id AS shift_table_id,
@@ -31,7 +37,7 @@ class _ShiftDataUtil {
             T2.end_time AS end_time,
             T2.holiday_flag AS holiday_flag
           FROM shift_table T1 INNER JOIN shift_record T2 ON T1.id = T2.shift_table_id
-          WHERE T1.show_flag = 1
+          $showFlagWHere
           ORDER BY T1.order_num ASC, T2.order_num ASC;
         ''');
     List<ShiftDataModel> list = [];
