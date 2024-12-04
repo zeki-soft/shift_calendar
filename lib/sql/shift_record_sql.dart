@@ -33,17 +33,23 @@ class ShiftRecordSql extends CommonSql {
   static void insert({required List<ShiftRecordModel> recordList}) {
     try {
       final stmt = CommonSql.db.prepare('''
-          INSERT INTO shift_record (id, shift_table_id, order_num, start_time, end_time, holiday_flag)
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO shift_record (id, shift_table_id, order_num, identifier, start_time, end_time, holiday_flag)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT (id) 
-          DO UPDATE SET shift_table_id = shift_record.shift_table_id, order_num = shift_record.order_num, 
-            start_time = shift_record.start_time, end_time = shift_record.end_time, holiday_flag = shift_record.holiday_flag;
+          DO UPDATE SET 
+            shift_table_id = shift_record.shift_table_id, 
+            order_num = shift_record.order_num, 
+            identifier = shift_record.identifier,
+            start_time = shift_record.start_time, 
+            end_time = shift_record.end_time, 
+            holiday_flag = shift_record.holiday_flag;
         ''');
       recordList.forEach((data) {
         stmt.execute([
           data.id,
           data.shiftTableId,
           data.orderNum,
+          data.identifier,
           data.startTime,
           data.endTime,
           data.holidayFlag,
@@ -59,13 +65,14 @@ class ShiftRecordSql extends CommonSql {
   static void update({required List<ShiftRecordModel> recordList}) {
     final stmt = CommonSql.db.prepare('''
           UPDATE shift_record 
-          SET shift_table_id = ?, order_num = ?, start_time = ?, end_time = ?, holiday_flag = ?
+          SET shift_table_id = ?, order_num = ?, identifier = ?, start_time = ?, end_time = ?, holiday_flag = ?
           WHERE id = ?;
         ''');
     recordList.forEach((data) {
       stmt.execute([
         data.shiftTableId,
         data.orderNum,
+        data.identifier,
         data.startTime,
         data.endTime,
         data.holidayFlag,
@@ -98,7 +105,7 @@ class ShiftRecordSql extends CommonSql {
   static ShiftRecordModel? getShiftRecord({required int id}) {
     ShiftRecordModel? model;
     final ResultSet resultSet = CommonSql.db.select('''
-        SELECT id, shift_table_id, order_num, start_time, end_time, holiday_flag
+        SELECT id, shift_table_id, order_num, identifier, start_time, end_time, holiday_flag
         FROM shift_record 
         WHERE id = ?
         ORDER BY order_num ASC;
@@ -109,6 +116,7 @@ class ShiftRecordSql extends CommonSql {
           id: row['id'],
           shiftTableId: row['shift_table_id'],
           orderNum: row['order_num'],
+          identifier: row['identifier'],
           startTime: row['start_time'],
           endTime: row['end_time'],
           holidayFlag: row['holiday_flag'] == 1);
@@ -121,14 +129,14 @@ class ShiftRecordSql extends CommonSql {
     ResultSet resultSet;
     if (shiftTableId != null) {
       resultSet = CommonSql.db.select('''
-        SELECT id, shift_table_id, order_num, start_time, end_time, holiday_flag
+        SELECT id, shift_table_id, order_num, identifier, start_time, end_time, holiday_flag
         FROM shift_record 
         WHERE shift_table_id = ?
         ORDER BY order_num ASC;
         ''', [shiftTableId]);
     } else {
       resultSet = CommonSql.db.select('''
-        SELECT id, shift_table_id, order_num, start_time, end_time, holiday_flag 
+        SELECT id, shift_table_id, order_num, identifier, start_time, end_time, holiday_flag 
         FROM shift_record
         ORDER BY order_num ASC;
         ''');
@@ -139,6 +147,7 @@ class ShiftRecordSql extends CommonSql {
           id: row['id'],
           shiftTableId: row['shift_table_id'],
           orderNum: row['order_num'],
+          identifier: row['identifier'],
           startTime: row['start_time'],
           endTime: row['end_time'],
           holidayFlag: row['holiday_flag'] == 1);

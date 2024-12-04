@@ -6,6 +6,7 @@ class ShiftDataModel {
   String baseDate;
   int recordId;
   int recordOrderNum;
+  String identifier;
   String startTime;
   String endTime;
   bool holidayFlag;
@@ -16,6 +17,7 @@ class ShiftDataModel {
     required this.baseDate,
     required this.recordId,
     required this.recordOrderNum,
+    required this.identifier,
     required this.startTime,
     required this.endTime,
     required this.holidayFlag,
@@ -27,6 +29,7 @@ class ShiftDataModel {
         baseDate: json["baseDate"],
         recordId: json["recordId"],
         recordOrderNum: json["recordOrderNum"],
+        identifier: json["identifier"],
         startTime: json["startTime"],
         endTime: json["endTime"],
         holidayFlag: json["holidayFlag"],
@@ -38,6 +41,7 @@ class ShiftDataModel {
         "baseDate": baseDate,
         "recordId": recordId,
         "recordOrderNum": recordOrderNum,
+        "identifier": identifier,
         "startTime": startTime,
         "endTime": endTime,
         "holidayFlag": holidayFlag,

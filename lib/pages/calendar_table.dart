@@ -19,17 +19,23 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 class CalendarTable extends ConsumerWidget {
   final calendarController = CalendarController();
   String shiftName = ''; // シフト名
-  int isSelectedWeek = 4; // 表示週数
+  int isSelectedShift = -1; // シフト選択
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ShiftCalendarNotifier shiftCalendarController =
         ref.read(shiftCalendarProvider.notifier);
     // シフト表全件取得(監視)
-    List<ShiftDataModel> listItems = ref.watch(shiftCalendarProvider);
+    List<ShiftDataModel> dataItems = ref.watch(shiftCalendarProvider);
+    List<ShiftTableModel> tableItems = ShiftTableSql.getShiftTableAll();
     shiftName = '';
-    if (KeyManage.windowKeyValue == WindowEnums.single.value) {
-      if (listItems.isNotEmpty) {
-        shiftName = listItems[0].shiftName;
+    if (KeyManage.windowValue == WindowEnums.single.value) {
+      if (dataItems.isNotEmpty) {
+        shiftName = dataItems[0].shiftName;
+      }
+      // プルダウン初期選択値
+      var select = tableItems.where((element) => element.showFlag);
+      if (select.isEmpty) {
+        isSelectedShift = select.first.id;
       }
     }
 
@@ -97,39 +103,48 @@ class CalendarTable extends ConsumerWidget {
                           fontSize: 25,
                         )))),
             // 表示週変更プルダウン
-            DropdownButton(
-              items: const [
-                DropdownMenuItem(
-                  value: 1,
-                  child: Text('1 week'),
-                ),
-                DropdownMenuItem(
-                  value: 2,
-                  child: Text('2 weeks'),
-                ),
-                DropdownMenuItem(
-                  value: 3,
-                  child: Text('3 weeks'),
-                ),
-                DropdownMenuItem(
-                  value: 4,
-                  child: Text('4 weeks'),
-                ),
-                DropdownMenuItem(
-                  value: 5,
-                  child: Text('5 weeks'),
-                ),
-                DropdownMenuItem(
-                  value: 6,
-                  child: Text('6 weeks'),
-                ),
-              ],
-              value: isSelectedWeek,
-              onChanged: (int? value) {
-                // TODO
-                print('TEST');
-              },
-            ),
+            // DropdownButton(
+            //   items: [
+            //     const DropdownMenuItem(
+            //       value: -1,
+            //       child: Text('全シフト表示'),
+            //     ),
+            //     // 個別シフト表示
+            //     for (var item in tableItems) ...{
+            //       DropdownMenuItem(
+            //         value: item.id,
+            //         child: Text(item.shiftName),
+            //       ),
+            //     }
+            //   ],
+            //   value: isSelectedShift,
+            //   onChanged: (int? selectVal) {
+            //     if (selectVal == -1) {
+            //       // 全シフト表示
+            //       String value = WindowEnums.all.value;
+            //       KeyManage.windowValue = value;
+            //       KeyManage.prefs.setString(KeyManage.windowKey, value);
+            //       // 画面更新処理
+            //       shiftCalendarController.update();
+            //     } else {
+            //       // シングル表示
+            //       String value = WindowEnums.single.value;
+            //       KeyManage.windowValue = value;
+            //       KeyManage.prefs.setString(KeyManage.windowKey, value);
+            //       // 表示フラグOFF
+            //       ShiftTableSql.offShowFlag();
+            //       // 表示フラグ更新
+            //       var data = tableItems
+            //           .where((element) => element.id == selectVal)
+            //           .first;
+            //       data.showFlag = true;
+            //       ShiftTableSql.update(tableList: [data]);
+            //       // 画面更新処理
+            //       shiftCalendarController.update();
+            //     }
+            //   },
+            // ),
+
             // 設定ボタン
             Expanded(
                 flex: 1,
@@ -158,7 +173,7 @@ class CalendarTable extends ConsumerWidget {
                                 child: ListView(
                                   children: [
                                     ListTile(
-                                      title: const Text('すべてのシフトを表示',
+                                      title: const Text('全シフトを表示',
                                           style: TextStyle(
                                             color: Colors.black,
                                             fontSize: 20,
@@ -166,7 +181,7 @@ class CalendarTable extends ConsumerWidget {
                                       onTap: () {
                                         // パラメータ保持
                                         String value = WindowEnums.all.value;
-                                        KeyManage.windowKeyValue = value;
+                                        KeyManage.windowValue = value;
                                         KeyManage.prefs.setString(
                                             KeyManage.windowKey, value);
                                         // 画面更新処理
@@ -185,7 +200,7 @@ class CalendarTable extends ConsumerWidget {
                                           // パラメータ保持
                                           String value =
                                               WindowEnums.single.value;
-                                          KeyManage.windowKeyValue = value;
+                                          KeyManage.windowValue = value;
                                           KeyManage.prefs.setString(
                                               KeyManage.windowKey, value);
                                           // 表示フラグOFF
@@ -210,19 +225,21 @@ class CalendarTable extends ConsumerWidget {
                     )))
           ])),
       Expanded(
-          child: KeyManage.windowKeyValue == WindowEnums.single.value
+          child: KeyManage.windowValue == WindowEnums.single.value
               ? SfCalendar(
                   // シングル表示
+                  initialDisplayDate: DateTime.now(),
+                  initialSelectedDate: DateTime.now(),
                   view: CalendarView.month,
                   showNavigationArrow: true,
-                  monthViewSettings: MonthViewSettings(
+                  monthViewSettings: const MonthViewSettings(
+                      numberOfWeeksInView: 6, // 表示週数
                       showTrailingAndLeadingDates: true, // 前月、次月表示
-                      appointmentDisplayCount:
-                          _getEventDisplayCount(listItems), // イベント表示数
+                      appointmentDisplayCount: 3, // イベント表示数
                       appointmentDisplayMode:
                           MonthAppointmentDisplayMode.appointment,
                       showAgenda: false, // イベント表示(無)
-                      monthCellStyle: const MonthCellStyle(
+                      monthCellStyle: MonthCellStyle(
                           // セルのスタイル
                           textStyle: TextStyle(
                               // 今月
@@ -241,22 +258,25 @@ class CalendarTable extends ConsumerWidget {
                               color: Colors.grey))),
                   headerDateFormat: 'yyyy年MM月',
                   controller: calendarController,
-                  dataSource: _getCalendarDataSourceSingle(listItems),
+                  dataSource: _getCalendarDataSourceSingle(dataItems),
                 )
               : SfCalendar(
                   // シフト全表示
+                  initialDisplayDate: DateTime.now(),
+                  initialSelectedDate: DateTime.now(),
                   appointmentBuilder: appointmentBuilder,
                   view: CalendarView.month,
                   showNavigationArrow: true,
-                  monthViewSettings: MonthViewSettings(
-                      numberOfWeeksInView: 3, // 表示週数 TODO
+                  monthViewSettings: const MonthViewSettings(
+                      numberOfWeeksInView: 6, // 表示週数
                       showTrailingAndLeadingDates: true, // 前月、次月表示
-                      appointmentDisplayCount:
-                          _getEventDisplayCount(listItems), // イベント表示数(シフト数)
+                      appointmentDisplayCount: 4, // イベント表示数(シフト数)
                       appointmentDisplayMode:
                           MonthAppointmentDisplayMode.appointment,
                       showAgenda: true, // イベント表示(有)
-                      monthCellStyle: const MonthCellStyle(
+                      agendaItemHeight: 30, // イベントセルの高さ
+                      agendaViewHeight: 150, // イベントビューの高さ
+                      monthCellStyle: MonthCellStyle(
                           // セルのスタイル
                           textStyle: TextStyle(
                               // 今月
@@ -275,25 +295,10 @@ class CalendarTable extends ConsumerWidget {
                               color: Colors.grey))),
                   headerDateFormat: 'yyyy年MM月',
                   controller: calendarController,
-                  dataSource: _getCalendarDataSourceAll(listItems),
+                  dataSource: _getCalendarDataSourceAll(dataItems),
                 ))
     ])));
   }
-}
-
-// イベント表示数取得
-int _getEventDisplayCount(List<ShiftDataModel> listItems) {
-  int displayCount = 3; // 最低表示数
-  if (KeyManage.windowKeyValue == WindowEnums.all.value) {
-    var idSet = <int>{};
-    for (var item in listItems) {
-      idSet.add(item.shiftTableId);
-    }
-    if (idSet.length > 3) {
-      displayCount = idSet.length;
-    }
-  }
-  return displayCount;
 }
 
 // シングル表示設定
@@ -387,7 +392,6 @@ _AppointmentDataSource _getCalendarDataSourceAll(
       }
     }
   }
-
   // カスタマイズ
   return _AppointmentDataSource(appointments);
 }
@@ -407,20 +411,22 @@ Widget appointmentBuilder(BuildContext context,
   String title = notes[0];
   String startTime = notes[1];
   String endTime = notes[2];
-  return Column(
-    children: [
-      Container(
-        width: calendarAppointmentDetails.bounds.width,
-        height: calendarAppointmentDetails.bounds.height,
-        color: appointment.color,
-        child: Text(
-          appointment.color == Colors.red
-              ? '${appointment.subject}\n$title  休日'
-              : '${appointment.subject}\n$title  $startTime - $endTime',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 18, color: Colors.white),
-        ),
-      )
-    ],
-  );
+  return FittedBox(
+      fit: BoxFit.fill,
+      child: Column(
+        children: [
+          Container(
+            width: calendarAppointmentDetails.bounds.width,
+            height: calendarAppointmentDetails.bounds.height,
+            color: appointment.color,
+            child: Text(
+              appointment.color == Colors.red
+                  ? '${appointment.subject}\n$title  休日'
+                  : '${appointment.subject}\n$title  $startTime - $endTime',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 9, color: Colors.white),
+            ),
+          )
+        ],
+      ));
 }

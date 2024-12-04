@@ -32,6 +32,8 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
   ShiftRecordModel recordData;
   WidgetRef ref;
   bool updateFlag;
+  TextEditingController _identifierController =
+      TextEditingController(); // 識別子コントローラー
   TextEditingController _startTimeController =
       TextEditingController(); // 開始時間コントローラー
   TextEditingController _endTimeController =
@@ -48,6 +50,7 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
   void initState() {
     super.initState();
     // 入力初期値
+    _identifierController.text = recordData.identifier;
     _startTimeController.text = recordData.startTime;
     _endTimeController.text = recordData.endTime;
     _holidayFlag = recordData.holidayFlag;
@@ -73,8 +76,20 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
       ),
       content: Container(
           width: 320,
-          height: 280,
+          height: 380,
           child: Column(mainAxisAlignment: MainAxisAlignment.start, children: [
+            // 識別子入力
+            TextField(
+              controller: _identifierController,
+              decoration: const InputDecoration(
+                labelText: '識別子(１文字)',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (text) {
+                print("Current text: $text");
+              },
+            ),
+            const SizedBox(height: 20),
             // 開始時間入力
             _TimeTextField(_startTimeController, _holidayFlag, '開始時間'),
             const SizedBox(height: 20),
@@ -112,7 +127,18 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
                       _endTimeController.text = '18:00';
                     }
                   } else {
-                    // 入力チェック
+                    // 識別子チェック
+                    if (_identifierController.text.length != 1) {
+                      // 入力チェックエラー
+                      Fluttertoast.showToast(
+                          msg: '識別子は１文字で入力してください。',
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
+                          fontSize: 16.0);
+                      // ダイアログ入力に戻る
+                      return;
+                    }
+                    // 時間形式チェック
                     final regTime = RegExp(r'^([01][0-9]|2[0-4]):[0-5][0-9]$');
                     bool checkFlag =
                         regTime.hasMatch(_startTimeController.text) &&
@@ -133,6 +159,7 @@ class _TimeEditDialogState extends State<TimeEditDialog> {
                       id: recordData.id,
                       shiftTableId: recordData.shiftTableId,
                       orderNum: recordData.orderNum,
+                      identifier: _identifierController.text,
                       startTime: _startTimeController.text,
                       endTime: _endTimeController.text,
                       holidayFlag: _holidayFlag);

@@ -27,8 +27,16 @@ void main() async {
     // 初期値設定
     KeyManage.prefs.setString(KeyManage.windowKey, WindowEnums.all.value);
   } else {
-    KeyManage.windowKeyValue = windowValue;
+    KeyManage.windowValue = windowValue;
   }
+
+  // int? weekValue = KeyManage.prefs.getInt(KeyManage.weekKey);
+  // if (weekValue == null) {
+  //   // 初期値設定
+  //   KeyManage.prefs.setInt(KeyManage.weekKey, 5);
+  // } else {
+  //   KeyManage.weekValue = weekValue;
+  // }
 
   runApp(ProviderScope(child: MyApp()));
 }

@@ -112,6 +112,7 @@ class ShiftEditDetail extends ConsumerWidget {
                   shiftTableId: shiftData.id,
                   orderNum: ShiftRecordSql.generateOrderNum(
                       shiftTableId: shiftData.id),
+                  identifier: '',
                   startTime: '',
                   endTime: '',
                   holidayFlag: false);
@@ -145,6 +146,14 @@ class ShiftEditDetail extends ConsumerWidget {
               child: FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text('シフト基準日',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)))),
+          Expanded(
+              flex: 1,
+              child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('識別子',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold)))),
@@ -190,7 +199,7 @@ class ShiftEditDetail extends ConsumerWidget {
     String baseDate =
         dateFormat.format(date.add(Duration(days: item.orderNum)));
     return Card(
-        key: Key(item.id.toString()), // キー指定
+        key: Key(item.id.toString()),
         child: Dismissible(
             key: Key(item.id.toString()),
             onDismissed: (DismissDirection direction) {
@@ -259,30 +268,31 @@ class ShiftEditDetail extends ConsumerWidget {
                   Expanded(
                       // シフト基準日
                       flex: 2,
-                      child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            baseDate,
-                            textAlign: TextAlign.center,
-                          ))),
+                      child: Text(
+                        baseDate,
+                        textAlign: TextAlign.center,
+                      )),
+                  Expanded(
+                      // 識別子
+                      flex: 1,
+                      child: Text(
+                        item.identifier,
+                        textAlign: TextAlign.center,
+                      )),
                   Expanded(
                       // 開始時間
                       flex: 2,
-                      child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            item.holidayFlag ? '' : item.startTime,
-                            textAlign: TextAlign.center,
-                          ))),
+                      child: Text(
+                        item.holidayFlag ? '' : item.startTime,
+                        textAlign: TextAlign.center,
+                      )),
                   Expanded(
                       // 終了時間
                       flex: 2,
-                      child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            item.holidayFlag ? '' : item.endTime,
-                            textAlign: TextAlign.center,
-                          ))),
+                      child: Text(
+                        item.holidayFlag ? '' : item.endTime,
+                        textAlign: TextAlign.center,
+                      )),
                   Expanded(
                     // 休日
                     flex: 1,

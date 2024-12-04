@@ -29,6 +29,7 @@ class CommonSql {
             id INTEGER NOT NULL,
             shift_table_id INTEGER NOT NULL,
             order_num INTEGER NOT NULL,
+            identifier TEXT NOT NULL,
             start_time TEXT,
             end_time TEXT,
             holiday_flag BOOLEAN,

@@ -3,7 +3,6 @@ import 'package:shift_calendar/enums/window_enums.dart';
 import 'package:shift_calendar/model/shift_data_model.dart';
 import 'package:shift_calendar/sql/common_sql.dart';
 import 'package:shift_calendar/utils/key_manage.dart';
-import 'package:shift_calendar/utils/string_util.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 // シフトカレンダーを取得するProvider
@@ -23,7 +22,7 @@ class ShiftCalendarNotifier extends StateNotifier<List<ShiftDataModel>> {
 class _ShiftDataUtil {
   // シフト表データ全件取得
   List<ShiftDataModel> getShiftCalendar() {
-    String showFlagWHere = KeyManage.windowKeyValue == WindowEnums.single.value
+    String showFlagWHere = KeyManage.windowValue == WindowEnums.single.value
         ? 'WHERE T1.show_flag = 1'
         : '';
     final ResultSet resultSet = CommonSql.db.select('''
@@ -33,6 +32,7 @@ class _ShiftDataUtil {
             T1.base_date AS base_date,
             T2.id AS record_id,
             T2.order_num AS record_order_num,
+            T2.identifier AS identifier,
             T2.start_time AS start_time,
             T2.end_time AS end_time,
             T2.holiday_flag AS holiday_flag
@@ -43,11 +43,12 @@ class _ShiftDataUtil {
     List<ShiftDataModel> list = [];
     for (Row row in resultSet) {
       ShiftDataModel model = ShiftDataModel(
-          shiftTableId: row["shift_table_id"],
-          shiftName: row["shift_name"],
-          baseDate: row["base_date"],
+          shiftTableId: row['shift_table_id'],
+          shiftName: row['shift_name'],
+          baseDate: row['base_date'],
           recordId: row['record_id'],
           recordOrderNum: row['record_order_num'],
+          identifier: row['identifier'],
           startTime: row['start_time'],
           endTime: row['end_time'],
           holidayFlag: row['holiday_flag'] == 1);

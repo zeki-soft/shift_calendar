@@ -100,6 +100,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                           id: id,
                           shiftTableId: shiftData.id,
                           orderNum: 0,
+                          identifier: '①',
                           startTime: '09:00',
                           endTime: '18:00',
                           holidayFlag: false,
@@ -108,6 +109,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                           id: id + 1,
                           shiftTableId: shiftData.id,
                           orderNum: 1,
+                          identifier: '②',
                           startTime: '12:00',
                           endTime: '21:00',
                           holidayFlag: false,
@@ -116,6 +118,7 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                           id: id + 2,
                           shiftTableId: shiftData.id,
                           orderNum: 2,
+                          identifier: '③',
                           startTime: '15:00',
                           endTime: '00:00',
                           holidayFlag: false,
@@ -125,7 +128,6 @@ class _ShiftTitleDialogState extends State<ShiftTitleDialog> {
                     }
                     // シフト編集を更新
                     shiftCalendarController.update();
-                    // shiftTableController.update();
                     // ダイアログを閉じる
                     Navigator.pop(context);
                     if (!updateFlag) {

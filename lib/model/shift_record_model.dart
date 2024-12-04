@@ -4,6 +4,7 @@ class ShiftRecordModel {
   int id;
   int shiftTableId;
   int orderNum;
+  String identifier;
   String startTime;
   String endTime;
   bool holidayFlag;
@@ -12,6 +13,7 @@ class ShiftRecordModel {
     required this.id,
     required this.shiftTableId,
     required this.orderNum,
+    required this.identifier,
     required this.startTime,
     required this.endTime,
     required this.holidayFlag,
@@ -22,6 +24,7 @@ class ShiftRecordModel {
         id: json["id"],
         shiftTableId: json["shiftTableId"],
         orderNum: json["orderNum"],
+        identifier: json["identifier"],
         startTime: json["startTime"],
         endTime: json["endTime"],
         holidayFlag: json["holidayFlag"],
@@ -31,6 +34,7 @@ class ShiftRecordModel {
         "id": id,
         "shiftTableId": shiftTableId,
         "orderNum": orderNum,
+        "identifier": identifier,
         "startTime": startTime,
         "endTime": endTime,
         "holidayFlag": holidayFlag,

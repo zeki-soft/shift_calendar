@@ -76,6 +76,16 @@ class ShiftEdit extends ConsumerWidget {
           height: 64.0,
           child: FloatingActionButton(
             onPressed: () {
+              // 4件以上は追加不可
+              if (listItems.length >= 4) {
+                // 新規作成の場合
+                Fluttertoast.showToast(
+                    msg: 'シフトは５件以上は登録できません。',
+                    backgroundColor: Colors.black,
+                    textColor: Colors.white,
+                    fontSize: 16.0);
+                return;
+              }
               // 新規ID取得
               int id = ShiftTableSql.generateId();
               // 新規作成データを生成
