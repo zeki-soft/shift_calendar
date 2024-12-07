@@ -200,23 +200,6 @@ class ShiftEdit extends ConsumerWidget {
                   );
                 },
                 title: Row(children: [
-                  // 表示チェックボックス
-                  // Expanded(
-                  //   flex: 2,
-                  //   child: Radio(
-                  //       value: shiftData.orderNum,
-                  //       groupValue: _selectValue,
-                  //       onChanged: (value) {
-                  //         _selectValue = value!;
-                  //         // 表示フラグOFF
-                  //         ShiftTableSql.offShowFlag();
-                  //         // 表示フラグ更新
-                  //         shiftData.showFlag = true;
-                  //         ShiftTableSql.update(tableList: [shiftData]);
-                  //         // 画面更新処理
-                  //         shiftCalendarController.update();
-                  //       }),
-                  // ),
                   // シフト名
                   Expanded(
                       flex: 7,

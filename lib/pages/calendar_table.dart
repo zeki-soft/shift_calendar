@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:shift_calendar/constant/constant.dart';
 import 'package:shift_calendar/enums/window_enums.dart';
 import 'package:shift_calendar/model/json_file_model.dart';
 import 'package:shift_calendar/model/shift_data_model.dart';
@@ -104,7 +105,7 @@ class CalendarTable extends ConsumerWidget {
                     child: Container(
                         alignment: Alignment.center,
                         child: Text(shiftName,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: Colors.black,
                               fontSize: 15,
                             )))),
@@ -112,7 +113,7 @@ class CalendarTable extends ConsumerWidget {
                 Expanded(
                     flex: 1,
                     child: Container(
-                        alignment: Alignment.centerRight,
+                        alignment: Alignment.topCenter,
                         child: IconButton(
                           icon: const Icon(Icons.settings),
                           iconSize: 20,
@@ -192,13 +193,14 @@ class CalendarTable extends ConsumerWidget {
           child: KeyManage.windowValue == WindowEnums.single.value
               ? SfCalendar(
                   // シングル表示
+                  todayHighlightColor: Colors.orange, // 今日の日付色
                   initialDisplayDate: DateTime.now(),
                   initialSelectedDate: DateTime.now(),
                   view: CalendarView.month,
                   showNavigationArrow: true,
                   monthViewSettings: const MonthViewSettings(
-                      numberOfWeeksInView: 5, // 表示週数
-                      showTrailingAndLeadingDates: true, // 前月、次月表示
+                      numberOfWeeksInView: 6, // 表示週数(6未満だと月を跨ぐ)
+                      showTrailingAndLeadingDates: false, // 前月、次月表示
                       appointmentDisplayCount: 3, // イベント表示数
                       appointmentDisplayMode:
                           MonthAppointmentDisplayMode.appointment,
@@ -209,54 +211,35 @@ class CalendarTable extends ConsumerWidget {
                               // 今月
                               fontStyle: FontStyle.normal,
                               fontSize: 15,
-                              color: Colors.black),
-                          trailingDatesTextStyle: TextStyle(
-                              // 前月
-                              fontStyle: FontStyle.normal,
-                              fontSize: 15,
-                              color: Colors.grey),
-                          leadingDatesTextStyle: TextStyle(
-                              // 次月
-                              fontStyle: FontStyle.normal,
-                              fontSize: 15,
-                              color: Colors.grey))),
+                              color: Colors.black))),
                   headerDateFormat: 'yyyy年MM月',
                   controller: calendarController,
                   dataSource: _getCalendarDataSourceSingle(dataItems),
                 )
               : SfCalendar(
                   // シフト全表示
+                  todayHighlightColor: Colors.orange, // 今日の日付色
                   initialDisplayDate: DateTime.now(),
                   initialSelectedDate: DateTime.now(),
                   appointmentBuilder: appointmentBuilder, // イベント表示設定
                   view: CalendarView.month,
                   showNavigationArrow: true,
-                  monthViewSettings: const MonthViewSettings(
-                      numberOfWeeksInView: 5, // 表示週数
-                      showTrailingAndLeadingDates: true, // 前月、次月表示
+                  monthViewSettings: MonthViewSettings(
+                      numberOfWeeksInView: 6, // 表示週数(6未満だと月を跨ぐ)
+                      showTrailingAndLeadingDates: false, // 前月、次月表示
                       appointmentDisplayCount: 4, // イベント表示数(シフト数)
                       appointmentDisplayMode:
                           MonthAppointmentDisplayMode.appointment,
                       showAgenda: true, // イベント表示(有)
-                      agendaItemHeight: 15, // イベントセルの高さ
-                      agendaViewHeight: 100, // イベントビューの高さ
-                      monthCellStyle: MonthCellStyle(
+                      agendaItemHeight: Constant.aspectRatio * 10, // イベントセルの高さ
+                      agendaViewHeight: Constant.aspectRatio * 70, // イベントビューの高さ
+                      monthCellStyle: const MonthCellStyle(
                           // セルのスタイル
                           textStyle: TextStyle(
                               // 今月
                               fontStyle: FontStyle.normal,
                               fontSize: 15,
-                              color: Colors.black),
-                          trailingDatesTextStyle: TextStyle(
-                              // 前月
-                              fontStyle: FontStyle.normal,
-                              fontSize: 15,
-                              color: Colors.grey),
-                          leadingDatesTextStyle: TextStyle(
-                              // 次月
-                              fontStyle: FontStyle.normal,
-                              fontSize: 15,
-                              color: Colors.grey))),
+                              color: Colors.black))),
                   headerDateFormat: 'yyyy年MM月',
                   controller: calendarController,
                   dataSource: _getCalendarDataSourceAll(dataItems),
@@ -378,6 +361,14 @@ Widget appointmentBuilder(BuildContext context,
     startTime = notes[1];
     endTime = notes[2];
   }
+
+  // 縦横比に応じて半角空白を挿入
+  String space = '';
+  int count = (32 / Constant.aspectRatio).toInt();
+  for (int i = 0; i < count; i++) {
+    space += ' ';
+  }
+
   return FittedBox(
       fit: BoxFit.fill,
       child: Column(
@@ -386,13 +377,14 @@ Widget appointmentBuilder(BuildContext context,
             width: calendarAppointmentDetails.bounds.width,
             height: calendarAppointmentDetails.bounds.height,
             color: appointment.color,
-            alignment: Alignment.center,
             child: Text(
               appointment.color == Colors.red
-                  ? '           ${appointment.subject}          $title  休日               '
-                  : '           ${appointment.subject}          $title  $startTime - $endTime',
-              textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 8, color: Colors.white),
+                  ? '${appointment.subject}$space$title                休  日'
+                  : '${appointment.subject}$space$title  $startTime - $endTime',
+              textAlign: TextAlign
+                  .center, // 表示される範囲で中央寄せ、両端をトリムする。高さを文字と合わせないと改行表示される。
+              style: TextStyle(
+                  fontSize: Constant.aspectRatio * 7, color: Colors.white),
             ),
           )
         ],

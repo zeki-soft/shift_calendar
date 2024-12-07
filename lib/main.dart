@@ -14,6 +14,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shift_calendar/utils/key_manage.dart';
 
+import 'constant/constant.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -63,6 +65,8 @@ class _MyAppState extends State<MyApp> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
+    // 定数初期化
+    Constant.initialize(context);
     return FutureBuilder<Directory>(
         future: getApplicationDocumentsDirectory(),
         builder: (BuildContext context, AsyncSnapshot<Directory> snapshot) {
