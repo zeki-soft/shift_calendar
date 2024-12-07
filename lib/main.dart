@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shift_calendar/enums/window_enums.dart';
@@ -29,14 +30,6 @@ void main() async {
   } else {
     KeyManage.windowValue = windowValue;
   }
-
-  // int? weekValue = KeyManage.prefs.getInt(KeyManage.weekKey);
-  // if (weekValue == null) {
-  //   // 初期値設定
-  //   KeyManage.prefs.setInt(KeyManage.weekKey, 5);
-  // } else {
-  //   KeyManage.weekValue = weekValue;
-  // }
 
   runApp(ProviderScope(child: MyApp()));
 }

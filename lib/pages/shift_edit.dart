@@ -80,7 +80,7 @@ class ShiftEdit extends ConsumerWidget {
               if (listItems.length >= 4) {
                 // 新規作成の場合
                 Fluttertoast.showToast(
-                    msg: 'シフトは５件以上は登録できません。',
+                    msg: 'シフト登録は最大４件までです。',
                     backgroundColor: Colors.black,
                     textColor: Colors.white,
                     fontSize: 16.0);
@@ -118,18 +118,10 @@ class ShiftEdit extends ConsumerWidget {
         child: const ListTile(
             title: Row(children: [
           Expanded(
-              flex: 2,
-              child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text('表示',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.bold)))),
-          Expanded(
               flex: 7,
               child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text('シフト名',
+                  child: Text('編集するシフトを選択してください',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                           color: Colors.white, fontWeight: FontWeight.bold)))),
@@ -209,22 +201,22 @@ class ShiftEdit extends ConsumerWidget {
                 },
                 title: Row(children: [
                   // 表示チェックボックス
-                  Expanded(
-                    flex: 2,
-                    child: Radio(
-                        value: shiftData.orderNum,
-                        groupValue: _selectValue,
-                        onChanged: (value) {
-                          _selectValue = value!;
-                          // 表示フラグOFF
-                          ShiftTableSql.offShowFlag();
-                          // 表示フラグ更新
-                          shiftData.showFlag = true;
-                          ShiftTableSql.update(tableList: [shiftData]);
-                          // 画面更新処理
-                          shiftCalendarController.update();
-                        }),
-                  ),
+                  // Expanded(
+                  //   flex: 2,
+                  //   child: Radio(
+                  //       value: shiftData.orderNum,
+                  //       groupValue: _selectValue,
+                  //       onChanged: (value) {
+                  //         _selectValue = value!;
+                  //         // 表示フラグOFF
+                  //         ShiftTableSql.offShowFlag();
+                  //         // 表示フラグ更新
+                  //         shiftData.showFlag = true;
+                  //         ShiftTableSql.update(tableList: [shiftData]);
+                  //         // 画面更新処理
+                  //         shiftCalendarController.update();
+                  //       }),
+                  // ),
                   // シフト名
                   Expanded(
                       flex: 7,

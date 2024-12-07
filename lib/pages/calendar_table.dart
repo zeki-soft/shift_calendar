@@ -13,7 +13,6 @@ import 'package:shift_calendar/sql/common_sql.dart';
 import 'package:shift_calendar/sql/shift_record_sql.dart';
 import 'package:shift_calendar/sql/shift_table_sql.dart';
 import 'package:shift_calendar/utils/key_manage.dart';
-import 'package:shift_calendar/utils/string_util.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class CalendarTable extends ConsumerWidget {
@@ -27,7 +26,7 @@ class CalendarTable extends ConsumerWidget {
     // シフト表全件取得(監視)
     List<ShiftDataModel> dataItems = ref.watch(shiftCalendarProvider);
     List<ShiftTableModel> tableItems = ShiftTableSql.getShiftTableAll();
-    shiftName = '';
+    shiftName = 'シフト一覧';
     if (KeyManage.windowValue == WindowEnums.single.value) {
       if (dataItems.isNotEmpty) {
         shiftName = dataItems[0].shiftName;
@@ -35,7 +34,12 @@ class CalendarTable extends ConsumerWidget {
       // プルダウン初期選択値
       var select = tableItems.where((element) => element.showFlag);
       if (select.isEmpty) {
-        isSelectedShift = select.first.id;
+        try {
+          isSelectedShift = select.first.id;
+        } catch (e) {
+          // シフト削除で見つからない場合
+          isSelectedShift = -1;
+        }
       }
     }
 
@@ -88,142 +92,102 @@ class CalendarTable extends ConsumerWidget {
             border: Border.all(color: Colors.black),
           ),
           // シフト名
-          child: Row(children: [
-            const Expanded(
-              flex: 1,
-              child: SizedBox(),
-            ),
-            Expanded(
-                flex: 5,
-                child: Container(
-                    alignment: Alignment.center,
-                    child: Text(shiftName,
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 25,
-                        )))),
-            // 表示週変更プルダウン
-            // DropdownButton(
-            //   items: [
-            //     const DropdownMenuItem(
-            //       value: -1,
-            //       child: Text('全シフト表示'),
-            //     ),
-            //     // 個別シフト表示
-            //     for (var item in tableItems) ...{
-            //       DropdownMenuItem(
-            //         value: item.id,
-            //         child: Text(item.shiftName),
-            //       ),
-            //     }
-            //   ],
-            //   value: isSelectedShift,
-            //   onChanged: (int? selectVal) {
-            //     if (selectVal == -1) {
-            //       // 全シフト表示
-            //       String value = WindowEnums.all.value;
-            //       KeyManage.windowValue = value;
-            //       KeyManage.prefs.setString(KeyManage.windowKey, value);
-            //       // 画面更新処理
-            //       shiftCalendarController.update();
-            //     } else {
-            //       // シングル表示
-            //       String value = WindowEnums.single.value;
-            //       KeyManage.windowValue = value;
-            //       KeyManage.prefs.setString(KeyManage.windowKey, value);
-            //       // 表示フラグOFF
-            //       ShiftTableSql.offShowFlag();
-            //       // 表示フラグ更新
-            //       var data = tableItems
-            //           .where((element) => element.id == selectVal)
-            //           .first;
-            //       data.showFlag = true;
-            //       ShiftTableSql.update(tableList: [data]);
-            //       // 画面更新処理
-            //       shiftCalendarController.update();
-            //     }
-            //   },
-            // ),
-
-            // 設定ボタン
-            Expanded(
-                flex: 1,
-                child: Container(
-                    alignment: Alignment.centerRight,
-                    child: IconButton(
-                      icon: const Icon(Icons.settings),
-                      iconSize: 35,
-                      onPressed: () {
-                        // 設定ボタン押下
-                        showDialog(
-                          context: context,
-                          builder: (_) {
-                            List<ShiftTableModel> listItems =
-                                ShiftTableSql.getShiftTableAll();
-                            return AlertDialog(
-                              title: const Center(
-                                  child: Text('表示シフトを選択',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 25,
-                                      ))),
-                              content: Container(
-                                width: double.maxFinite,
-                                height: 300,
-                                child: ListView(
-                                  children: [
-                                    ListTile(
-                                      title: const Text('全シフトを表示',
+          child: SizedBox(
+              height: 30,
+              child: Row(children: [
+                const Expanded(
+                  flex: 1,
+                  child: SizedBox(),
+                ),
+                Expanded(
+                    flex: 5,
+                    child: Container(
+                        alignment: Alignment.center,
+                        child: Text(shiftName,
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 15,
+                            )))),
+                // 設定ボタン
+                Expanded(
+                    flex: 1,
+                    child: Container(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          icon: const Icon(Icons.settings),
+                          iconSize: 20,
+                          onPressed: () {
+                            // 設定ボタン押下
+                            showDialog(
+                              context: context,
+                              builder: (_) {
+                                List<ShiftTableModel> listItems =
+                                    ShiftTableSql.getShiftTableAll();
+                                return AlertDialog(
+                                  title: const Center(
+                                      child: Text('表示シフトを選択',
                                           style: TextStyle(
                                             color: Colors.black,
-                                            fontSize: 20,
-                                          )),
-                                      onTap: () {
-                                        // パラメータ保持
-                                        String value = WindowEnums.all.value;
-                                        KeyManage.windowValue = value;
-                                        KeyManage.prefs.setString(
-                                            KeyManage.windowKey, value);
-                                        // 画面更新処理
-                                        shiftCalendarController.update();
-                                        Navigator.of(context).pop();
-                                      },
+                                            fontSize: 25,
+                                          ))),
+                                  content: Container(
+                                    width: double.maxFinite,
+                                    height: 300,
+                                    child: ListView(
+                                      children: [
+                                        ListTile(
+                                          title: const Text('シフト一覧',
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                                fontSize: 20,
+                                              )),
+                                          onTap: () {
+                                            // パラメータ保持
+                                            String value =
+                                                WindowEnums.all.value;
+                                            KeyManage.windowValue = value;
+                                            KeyManage.prefs.setString(
+                                                KeyManage.windowKey, value);
+                                            // 画面更新処理
+                                            shiftCalendarController.update();
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                        for (var shiftData in listItems) ...{
+                                          ListTile(
+                                            title: Text(shiftData.shiftName,
+                                                style: const TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 20,
+                                                )),
+                                            onTap: () {
+                                              // パラメータ保持
+                                              String value =
+                                                  WindowEnums.single.value;
+                                              KeyManage.windowValue = value;
+                                              KeyManage.prefs.setString(
+                                                  KeyManage.windowKey, value);
+                                              // 表示フラグOFF
+                                              ShiftTableSql.offShowFlag();
+                                              // 表示フラグ更新
+                                              shiftData.showFlag = true;
+                                              ShiftTableSql.update(
+                                                  tableList: [shiftData]);
+                                              // 画面更新処理
+                                              shiftCalendarController.update();
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        }
+                                      ],
                                     ),
-                                    for (var shiftData in listItems) ...{
-                                      ListTile(
-                                        title: Text(shiftData.shiftName,
-                                            style: const TextStyle(
-                                              color: Colors.black,
-                                              fontSize: 20,
-                                            )),
-                                        onTap: () {
-                                          // パラメータ保持
-                                          String value =
-                                              WindowEnums.single.value;
-                                          KeyManage.windowValue = value;
-                                          KeyManage.prefs.setString(
-                                              KeyManage.windowKey, value);
-                                          // 表示フラグOFF
-                                          ShiftTableSql.offShowFlag();
-                                          // 表示フラグ更新
-                                          shiftData.showFlag = true;
-                                          ShiftTableSql.update(
-                                              tableList: [shiftData]);
-                                          // 画面更新処理
-                                          shiftCalendarController.update();
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    }
-                                  ],
-                                ),
-                              ),
+                                  ),
+                                );
+                              },
                             );
                           },
-                        );
-                      },
-                    )))
-          ])),
+                        )))
+              ]))),
       Expanded(
           child: KeyManage.windowValue == WindowEnums.single.value
               ? SfCalendar(
@@ -233,7 +197,7 @@ class CalendarTable extends ConsumerWidget {
                   view: CalendarView.month,
                   showNavigationArrow: true,
                   monthViewSettings: const MonthViewSettings(
-                      numberOfWeeksInView: 6, // 表示週数
+                      numberOfWeeksInView: 5, // 表示週数
                       showTrailingAndLeadingDates: true, // 前月、次月表示
                       appointmentDisplayCount: 3, // イベント表示数
                       appointmentDisplayMode:
@@ -264,18 +228,18 @@ class CalendarTable extends ConsumerWidget {
                   // シフト全表示
                   initialDisplayDate: DateTime.now(),
                   initialSelectedDate: DateTime.now(),
-                  appointmentBuilder: appointmentBuilder,
+                  appointmentBuilder: appointmentBuilder, // イベント表示設定
                   view: CalendarView.month,
                   showNavigationArrow: true,
                   monthViewSettings: const MonthViewSettings(
-                      numberOfWeeksInView: 6, // 表示週数
+                      numberOfWeeksInView: 5, // 表示週数
                       showTrailingAndLeadingDates: true, // 前月、次月表示
                       appointmentDisplayCount: 4, // イベント表示数(シフト数)
                       appointmentDisplayMode:
                           MonthAppointmentDisplayMode.appointment,
                       showAgenda: true, // イベント表示(有)
-                      agendaItemHeight: 30, // イベントセルの高さ
-                      agendaViewHeight: 150, // イベントビューの高さ
+                      agendaItemHeight: 15, // イベントセルの高さ
+                      agendaViewHeight: 100, // イベントビューの高さ
                       monthCellStyle: MonthCellStyle(
                           // セルのスタイル
                           textStyle: TextStyle(
@@ -373,7 +337,7 @@ _AppointmentDataSource _getCalendarDataSourceAll(
         appointments.add(Appointment(
           startTime: baseDateCal,
           endTime: baseDateCal,
-          subject: StringUtil.numToStr(identifier),
+          subject: data.identifier,
           color: Colors.red,
           notes:
               '${data.shiftName}||$baseDate ${data.startTime}||$baseDate ${data.endTime}',
@@ -384,7 +348,7 @@ _AppointmentDataSource _getCalendarDataSourceAll(
         appointments.add(Appointment(
           startTime: baseDateCal,
           endTime: baseDateCal,
-          subject: StringUtil.numToStr(identifier),
+          subject: data.identifier,
           color: Colors.blue,
           notes: '${data.shiftName}||${data.startTime}||${data.endTime}',
           recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
@@ -403,14 +367,17 @@ class _AppointmentDataSource extends CalendarDataSource {
   }
 }
 
-// イベント表示カスタマイズ
+// イベント表示カスタマイズ（シフト一覧）
 Widget appointmentBuilder(BuildContext context,
     CalendarAppointmentDetails calendarAppointmentDetails) {
   final Appointment appointment = calendarAppointmentDetails.appointments.first;
-  List notes = appointment.notes!.split('||');
-  String title = notes[0];
-  String startTime = notes[1];
-  String endTime = notes[2];
+  String title = '', startTime = '', endTime = '';
+  if (appointment.notes! != '') {
+    List notes = appointment.notes!.split('||');
+    title = notes[0];
+    startTime = notes[1];
+    endTime = notes[2];
+  }
   return FittedBox(
       fit: BoxFit.fill,
       child: Column(
@@ -419,12 +386,13 @@ Widget appointmentBuilder(BuildContext context,
             width: calendarAppointmentDetails.bounds.width,
             height: calendarAppointmentDetails.bounds.height,
             color: appointment.color,
+            alignment: Alignment.center,
             child: Text(
               appointment.color == Colors.red
-                  ? '${appointment.subject}\n$title  休日'
-                  : '${appointment.subject}\n$title  $startTime - $endTime',
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 9, color: Colors.white),
+                  ? '           ${appointment.subject}          $title  休日               '
+                  : '           ${appointment.subject}          $title  $startTime - $endTime',
+              textAlign: TextAlign.left,
+              style: TextStyle(fontSize: 8, color: Colors.white),
             ),
           )
         ],
