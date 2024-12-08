@@ -7,8 +7,11 @@ class CommonSql {
 
   // 初期化（テーブル生成）
   static void init(Directory directory) {
-    db = sqlite3.open('${directory.path}/shift_calendar.sqlite3');
-
+    if (Platform.isWindows) {
+      db = sqlite3.open('C:/Users/hatoi/Downloads/shift_calendar.sqlite3');
+    } else {
+      db = sqlite3.open('${directory.path}/shift_calendar.sqlite3');
+    }
     // テーブル削除
     // CommonSql.drop();
 

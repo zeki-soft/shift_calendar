@@ -22,6 +22,7 @@ class CalendarTable extends ConsumerWidget {
   int isSelectedShift = -1; // シフト選択
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    Constant.initialize(context);
     ShiftCalendarNotifier shiftCalendarController =
         ref.read(shiftCalendarProvider.notifier);
     // シフト表全件取得(監視)
@@ -231,8 +232,8 @@ class CalendarTable extends ConsumerWidget {
                       appointmentDisplayMode:
                           MonthAppointmentDisplayMode.appointment,
                       showAgenda: true, // イベント表示(有)
-                      agendaItemHeight: Constant.aspectRatio * 10, // イベントセルの高さ
-                      agendaViewHeight: Constant.aspectRatio * 70, // イベントビューの高さ
+                      agendaItemHeight: Constant.agendaItemHeight, // イベントセルの高さ
+                      agendaViewHeight: Constant.agendaViewHeight, // イベントビューの高さ
                       monthCellStyle: const MonthCellStyle(
                           // セルのスタイル
                           textStyle: TextStyle(
@@ -360,12 +361,15 @@ Widget appointmentBuilder(BuildContext context,
     title = notes[0];
     startTime = notes[1];
     endTime = notes[2];
+    // シフト名の文字数を揃える
+    while (title.length <= 8) {
+      title += '　';
+    }
   }
 
   // 縦横比に応じて半角空白を挿入
   String space = '';
-  int count = (32 / Constant.aspectRatio).toInt();
-  for (int i = 0; i < count; i++) {
+  for (int i = 0; i < Constant.spaceCount; i++) {
     space += ' ';
   }
 
@@ -379,12 +383,12 @@ Widget appointmentBuilder(BuildContext context,
             color: appointment.color,
             child: Text(
               appointment.color == Colors.red
-                  ? '${appointment.subject}$space$title                休  日'
-                  : '${appointment.subject}$space$title  $startTime - $endTime',
+                  ? '${appointment.subject}$space$title　　　　休  日'
+                  : '${appointment.subject}$space$title　$startTime - $endTime',
               textAlign: TextAlign
                   .center, // 表示される範囲で中央寄せ、両端をトリムする。高さを文字と合わせないと改行表示される。
               style: TextStyle(
-                  fontSize: Constant.aspectRatio * 7, color: Colors.white),
+                  fontSize: Constant.eventFontSize, color: Colors.white),
             ),
           )
         ],

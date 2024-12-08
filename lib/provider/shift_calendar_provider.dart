@@ -22,10 +22,12 @@ class ShiftCalendarNotifier extends StateNotifier<List<ShiftDataModel>> {
 class _ShiftDataUtil {
   // シフト表データ全件取得
   List<ShiftDataModel> getShiftCalendar() {
-    String showFlagWHere = KeyManage.windowValue == WindowEnums.single.value
-        ? 'WHERE T1.show_flag = 1'
-        : '';
-    final ResultSet resultSet = CommonSql.db.select('''
+    List<ShiftDataModel> list = [];
+    try {
+      String showFlagWHere = KeyManage.windowValue == WindowEnums.single.value
+          ? 'WHERE T1.show_flag = 1'
+          : '';
+      final ResultSet resultSet = CommonSql.db.select('''
           SELECT 
             T1.id AS shift_table_id,
             T1.shift_name AS shift_name,
@@ -40,20 +42,23 @@ class _ShiftDataUtil {
           $showFlagWHere
           ORDER BY T1.order_num ASC, T2.order_num ASC;
         ''');
-    List<ShiftDataModel> list = [];
-    for (Row row in resultSet) {
-      ShiftDataModel model = ShiftDataModel(
-          shiftTableId: row['shift_table_id'],
-          shiftName: row['shift_name'],
-          baseDate: row['base_date'],
-          recordId: row['record_id'],
-          recordOrderNum: row['record_order_num'],
-          identifier: row['identifier'],
-          startTime: row['start_time'],
-          endTime: row['end_time'],
-          holidayFlag: row['holiday_flag'] == 1);
-      list.add(model);
+      for (Row row in resultSet) {
+        ShiftDataModel model = ShiftDataModel(
+            shiftTableId: row['shift_table_id'],
+            shiftName: row['shift_name'],
+            baseDate: row['base_date'],
+            recordId: row['record_id'],
+            recordOrderNum: row['record_order_num'],
+            identifier: row['identifier'],
+            startTime: row['start_time'],
+            endTime: row['end_time'],
+            holidayFlag: row['holiday_flag'] == 1);
+        list.add(model);
+      }
+    } catch (e) {
+      print(e);
     }
+
     return list;
   }
 }
