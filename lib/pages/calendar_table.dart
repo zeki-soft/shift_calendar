@@ -383,8 +383,8 @@ Widget appointmentBuilder(BuildContext context,
             color: appointment.color,
             child: Text(
               appointment.color == Colors.red
-                  ? '${appointment.subject}$space$title　　　　休  日'
-                  : '${appointment.subject}$space$title　$startTime - $endTime',
+                  ? '${appointment.subject}$space$title               休  日'
+                  : '${appointment.subject}$space$title  $startTime - $endTime',
               textAlign: TextAlign
                   .center, // 表示される範囲で中央寄せ、両端をトリムする。高さを文字と合わせないと改行表示される。
               style: TextStyle(

@@ -1,5 +1,5 @@
 【Androidリリースビルド】
-flutter build appbundle
+flutter build appbundle --release
 
 【iOSリリースビルド】
 flutter clean
