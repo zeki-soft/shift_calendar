@@ -197,16 +197,22 @@ class CalendarTable extends ConsumerWidget {
                   todayHighlightColor: Colors.orange, // 今日の日付色
                   initialDisplayDate: DateTime.now(),
                   initialSelectedDate: DateTime.now(),
+                  appointmentBuilder: appointmentBuilderSingle, // イベント表示設定
                   view: CalendarView.month,
                   showNavigationArrow: true,
-                  monthViewSettings: const MonthViewSettings(
+                  monthViewSettings: MonthViewSettings(
                       numberOfWeeksInView: 6, // 表示週数(6未満だと月を跨ぐ)
                       showTrailingAndLeadingDates: false, // 前月、次月表示
-                      appointmentDisplayCount: 3, // イベント表示数
+                      appointmentDisplayCount: Constant
+                          .appointmentDisplayCountSingle, // イベント表示数(2つ目は幅調整用)
                       appointmentDisplayMode:
                           MonthAppointmentDisplayMode.appointment,
-                      showAgenda: false, // イベント表示(無)
-                      monthCellStyle: MonthCellStyle(
+                      showAgenda: true, // イベント表示(有)
+                      agendaItemHeight:
+                          Constant.agendaItemHeightSingle, // イベントセルの高さ
+                      agendaViewHeight:
+                          Constant.agendaViewHeightSingle, // イベントビューの高さ
+                      monthCellStyle: const MonthCellStyle(
                           // セルのスタイル
                           textStyle: TextStyle(
                               // 今月
@@ -222,7 +228,7 @@ class CalendarTable extends ConsumerWidget {
                   todayHighlightColor: Colors.orange, // 今日の日付色
                   initialDisplayDate: DateTime.now(),
                   initialSelectedDate: DateTime.now(),
-                  appointmentBuilder: appointmentBuilder, // イベント表示設定
+                  appointmentBuilder: appointmentBuilderAll, // イベント表示設定
                   view: CalendarView.month,
                   showNavigationArrow: true,
                   monthViewSettings: MonthViewSettings(
@@ -265,26 +271,20 @@ _AppointmentDataSource _getCalendarDataSourceSingle(
       appointments.add(Appointment(
         startTime: baseDate,
         endTime: baseDate,
-        subject: '休',
+        subject: data.identifier,
         color: Colors.red,
+        notes:
+            '${data.shiftName}||$baseDate ${data.startTime}||$baseDate ${data.endTime}',
         recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
       ));
     } else {
-      // 開始時間
+      // 識別子を表示
       appointments.add(Appointment(
         startTime: baseDate,
         endTime: baseDate,
-        subject: data.startTime,
+        subject: data.identifier,
         color: Colors.blue,
-        recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
-      ));
-      // 終了時間(イベント順番を調整するため10秒加算)
-      DateTime endBaseDate = baseDate.add(const Duration(seconds: 10));
-      appointments.add(Appointment(
-        startTime: endBaseDate,
-        endTime: endBaseDate,
-        subject: data.endTime,
-        color: Colors.blue,
+        notes: '${data.shiftName}||${data.startTime}||${data.endTime}',
         recurrenceRule: 'FREQ=DAILY;INTERVAL=$roopNum',
       ));
     }
@@ -351,8 +351,48 @@ class _AppointmentDataSource extends CalendarDataSource {
   }
 }
 
-// イベント表示カスタマイズ（シフト一覧）
-Widget appointmentBuilder(BuildContext context,
+// イベント表示カスタマイズ（シングルシフト）
+Widget appointmentBuilderSingle(BuildContext context,
+    CalendarAppointmentDetails calendarAppointmentDetails) {
+  final Appointment appointment = calendarAppointmentDetails.appointments.first;
+  String title = '', startTime = '', endTime = '';
+  if (appointment.notes! != '') {
+    List notes = appointment.notes!.split('||');
+    title = notes[0];
+    startTime = notes[1];
+    endTime = notes[2];
+  }
+
+  // 縦横比に応じて半角空白を挿入
+  String space = '';
+  for (int i = 0; i < Constant.spaceCountSingle; i++) {
+    space += ' ';
+  }
+
+  return FittedBox(
+      fit: BoxFit.fill,
+      child: Column(
+        children: [
+          Container(
+            width: calendarAppointmentDetails.bounds.width,
+            height: calendarAppointmentDetails.bounds.height,
+            color: appointment.color,
+            child: Text(
+              appointment.color == Colors.red
+                  ? '${appointment.subject}'
+                  : '${appointment.subject}$space$startTime - $endTime',
+              textAlign: TextAlign
+                  .center, // 表示される範囲で中央寄せ、両端をトリムする。高さを文字と合わせないと改行表示される。
+              style: TextStyle(
+                  fontSize: Constant.eventFontSizeSingle, color: Colors.white),
+            ),
+          )
+        ],
+      ));
+}
+
+// イベント表示カスタマイズ（シフト全表示）
+Widget appointmentBuilderAll(BuildContext context,
     CalendarAppointmentDetails calendarAppointmentDetails) {
   final Appointment appointment = calendarAppointmentDetails.appointments.first;
   String title = '', startTime = '', endTime = '';
